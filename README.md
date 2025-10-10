@@ -39,26 +39,6 @@ Aplicação console em C para gerenciamento de sistema escolar com as seguintes 
 - 4ª Aula: 21h00-21h50
 - 5ª Aula: 21h50-22h40
 
-## Como Compilar
-
-### Opção 1: GCC (Linux/MinGW)
-```bash
-gcc -Wall -Wextra -std=c99 -o sistema_escolar sistema_escolar.c
-```
-
-### Opção 2: Visual Studio (Windows)
-```cmd
-cl sistema_escolar.c
-```
-
-### Opção 3: Code::Blocks ou Dev-C++
-Abra o arquivo `sistema_escolar.c` no IDE e compile normalmente.
-
-## Como Executar
-```bash
-./sistema_escolar
-```
-
 ## Menu de Opções
 1. **Login** - Fazer login com CPF e senha
 2. **Criar turma** - Cadastrar nova turma
@@ -102,8 +82,3 @@ Abra o arquivo `sistema_escolar.c` no IDE e compile normalmente.
 - Máximo 30 alunos por turma
 - Máximo 1000 aulas
 - Sem limite para número total de alunos e professores (limitado apenas pela memória disponível)
-
-## Observações
-- O sistema mantém os dados apenas em memória durante a execução
-- Para persistência de dados, seria necessário implementar salvamento em arquivo
-- O login funciona tanto para alunos quanto para professores
