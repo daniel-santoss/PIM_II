@@ -1,0 +1,2 @@
+2|1 ano A|2026|1|Matutino|30
+3|2 ano A|2026|2|Vespertino|30

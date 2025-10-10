@@ -7,7 +7,7 @@ $(TARGET): $(SOURCE)
 	$(CC) $(CFLAGS) -o $(TARGET) $(SOURCE)
 
 clean:
-	del $(TARGET).exe
+	del $(TARGET).exe *.txt
 
 run: $(TARGET)
 	./$(TARGET)
