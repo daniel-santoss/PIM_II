@@ -1,2 +1,4 @@
-10000004|J£lio|ju@gmail.com|JIH|03/02/2000|M|13973402825|Matem tica
-10000005|Julia|julia@gmail.com|JIH|01/01/2001|F|13975039833|Portugues
+10000004|Julio|ju@gmail.com|julio123|03/02/2000|M|13973402825|Matematica
+10000005|Julia|julia@gmail.com|julia123|01/01/2001|F|13975039833|Portugues
+10000007|Judite|jdt@gmail.com|jdt123|10/10/2000|F|18999303837|Portugues
+10000008|Ale|ale@gmail.com|ale123|01/01/2001|F|18493058774|Ciencias, Geografia, Historia

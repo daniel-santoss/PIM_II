@@ -1,1 +1,2 @@
 10000001|Daniel|dan@gmail.com|dan123|03/02/2007|M|56454251906
+10000006|David|david@gmail.com|david123|03/01/2009|M|18930476583

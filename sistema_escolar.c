@@ -108,21 +108,7 @@ void formatar_cpf(char *cpf, char *cpf_formatado) {
     sprintf(cpf_formatado, "%.3s.%.3s.%.3s-%.2s", cpf, cpf+3, cpf+6, cpf+9);
 }
 
-void criptografar_senha(char *senha, char *senha_criptografada) {
-    int chave = 123;
-    for (int i = 0; i < strlen(senha); i++) {
-        senha_criptografada[i] = senha[i] ^ chave;
-    }
-    senha_criptografada[strlen(senha)] = '\0';
-}
 
-void descriptografar_senha(char *senha_criptografada, char *senha_original) {
-    int chave = 123;
-    for (int i = 0; i < strlen(senha_criptografada); i++) {
-        senha_original[i] = senha_criptografada[i] ^ chave;
-    }
-    senha_original[strlen(senha_criptografada)] = '\0';
-}
 
 int cpf_ja_existe(char *cpf) {
     FILE *file;
@@ -179,7 +165,7 @@ void criar_turma() {
     scanf("%d", &nova_turma.ano);
     if (nova_turma.ano == 0) return;
     
-    printf("Serie (1° até o 3° ano) (0 para cancelar): ");
+    printf("Serie (1o ate o 3o ano) (0 para cancelar): ");
     scanf("%d", &nova_turma.serie);
     limpar_buffer();
     if (nova_turma.serie == 0) return;
@@ -319,12 +305,9 @@ void cadastrar_aluno() {
     novo_aluno.matricula = proxima_matricula++;
     printf("Matricula gerada automaticamente: %d\n", novo_aluno.matricula);
     
-    char senha_criptografada[50];
-    criptografar_senha(novo_aluno.senha, senha_criptografada);
-    
     FILE *file = fopen("alunos.txt", "a");
     if (file != NULL) {
-        fprintf(file, "%d|%s|%s|%s|%s|%c|%s\n", novo_aluno.matricula, novo_aluno.nome, novo_aluno.email, senha_criptografada, novo_aluno.data_nascimento, novo_aluno.genero, novo_aluno.cpf);
+        fprintf(file, "%d|%s|%s|%s|%s|%c|%s\n", novo_aluno.matricula, novo_aluno.nome, novo_aluno.email, novo_aluno.senha, novo_aluno.data_nascimento, novo_aluno.genero, novo_aluno.cpf);
         fclose(file);
         salvar_contadores();
         printf("Aluno cadastrado com sucesso!\n");
@@ -427,17 +410,68 @@ void cadastrar_professor() {
     novo_professor.matricula = proxima_matricula++;
     printf("Matricula gerada automaticamente: %d\n", novo_professor.matricula);
     
-    printf("Materia (max 50 caracteres): ");
-    fgets(novo_professor.materia, 50, stdin);
-    novo_professor.materia[strcspn(novo_professor.materia, "\n")] = 0;
-    if (strcmp(novo_professor.materia, "0") == 0) return;
+    char materias[200] = "";
+    int primeira_materia = 1;
     
-    char senha_criptografada[50];
-    criptografar_senha(novo_professor.senha, senha_criptografada);
+    while (1) {
+        int opcao_materia;
+        printf("\nSelecione a materia:\n");
+        printf("1 - Matematica\n");
+        printf("2 - Portugues\n");
+        printf("3 - Ciencias\n");
+        printf("4 - Geografia\n");
+        printf("5 - Historia\n");
+        printf("6 - Ingles\n");
+        printf("7 - Filosofia\n");
+        printf("8 - Sociologia\n");
+        printf("0 - Cancelar\n");
+        printf("Opcao: ");
+        scanf("%d", &opcao_materia);
+        limpar_buffer();
+        
+        if (opcao_materia == 0) return;
+        
+        char materia_selecionada[20];
+        switch (opcao_materia) {
+            case 1: strcpy(materia_selecionada, "Matematica"); break;
+            case 2: strcpy(materia_selecionada, "Portugues"); break;
+            case 3: strcpy(materia_selecionada, "Ciencias"); break;
+            case 4: strcpy(materia_selecionada, "Geografia"); break;
+            case 5: strcpy(materia_selecionada, "Historia"); break;
+            case 6: strcpy(materia_selecionada, "Ingles"); break;
+            case 7: strcpy(materia_selecionada, "Filosofia"); break;
+            case 8: strcpy(materia_selecionada, "Sociologia"); break;
+            default:
+                printf("Opcao invalida!\n");
+                continue;
+        }
+        
+        if (primeira_materia) {
+            strcpy(materias, materia_selecionada);
+            primeira_materia = 0;
+        } else {
+            strcat(materias, ", ");
+            strcat(materias, materia_selecionada);
+        }
+        
+        printf("Materia adicionada: %s\n", materia_selecionada);
+        printf("Materias selecionadas: %s\n", materias);
+        
+        char continuar;
+        printf("\nDeseja selecionar mais uma materia? (S/N): ");
+        scanf(" %c", &continuar);
+        limpar_buffer();
+        
+        if (continuar != 'S' && continuar != 's') {
+            break;
+        }
+    }
+    
+    strcpy(novo_professor.materia, materias);
     
     FILE *file = fopen("professores.txt", "a");
     if (file != NULL) {
-        fprintf(file, "%d|%s|%s|%s|%s|%c|%s|%s\n", novo_professor.matricula, novo_professor.nome, novo_professor.email, senha_criptografada, novo_professor.data_nascimento, novo_professor.genero, novo_professor.cpf, novo_professor.materia);
+        fprintf(file, "%d|%s|%s|%s|%s|%c|%s|%s\n", novo_professor.matricula, novo_professor.nome, novo_professor.email, novo_professor.senha, novo_professor.data_nascimento, novo_professor.genero, novo_professor.cpf, novo_professor.materia);
         fclose(file);
         salvar_contadores();
         printf("Professor cadastrado com sucesso!\n");
@@ -481,7 +515,7 @@ void registrar_aula() {
         int matricula;
         char nome[100], materia[50];
         
-        sscanf(linha_prof, "%d|%[^|]|%*[^|]|%*[^|]|%*[^|]|%*c|%*[^|]|%s", &matricula, nome, materia);
+        sscanf(linha_prof, "%d|%[^|]|%*[^|]|%*[^|]|%*[^|]|%*c|%*[^|]|%[^\n]", &matricula, nome, materia);
         printf("%d - %s (%s)\n", matricula, nome, materia);
         encontrou_prof = 1;
     }
@@ -538,7 +572,7 @@ void registrar_aula() {
         char nome[100], turno[20];
         
         sscanf(linha_turma, "%d|%[^|]|%d|%d|%[^|]|%*d", &id, nome, &ano, &serie, turno);
-        printf("%d - %s (%dº ano, %dª série, %s)\n", id, nome, ano, serie, turno);
+        printf("%d - %s (%do ano, %da serie, %s)\n", id, nome, ano, serie, turno);
         encontrou_turma = 1;
     }
     fclose(turma_file);
@@ -593,7 +627,7 @@ void registrar_aula() {
         while (fgets(linha_prof, sizeof(linha_prof), prof_file)) {
             int mat_arquivo;
             char materia_prof[50];
-            sscanf(linha_prof, "%d|%*[^|]|%*[^|]|%*[^|]|%*[^|]|%*c|%*[^|]|%s", &mat_arquivo, materia_prof);
+            sscanf(linha_prof, "%d|%*[^|]|%*[^|]|%*[^|]|%*[^|]|%*c|%*[^|]|%[^\n]", &mat_arquivo, materia_prof);
             if (mat_arquivo == nova_aula.professor_matricula) {
                 strcpy(nova_aula.materia, materia_prof);
                 break;
@@ -642,13 +676,10 @@ int fazer_login() {
     if (file != NULL) {
         char linha[500];
         while (fgets(linha, sizeof(linha), file)) {
-            char nome[100], cpf_arquivo[15], senha_criptografada[50];
-            sscanf(linha, "%*d|%[^|]|%*[^|]|%[^|]|%*[^|]|%*c|%s", nome, senha_criptografada, cpf_arquivo);
+            char nome[100], cpf_arquivo[15], senha_arquivo[50];
+            sscanf(linha, "%*d|%[^|]|%*[^|]|%[^|]|%*[^|]|%*c|%s", nome, senha_arquivo, cpf_arquivo);
             
-            char senha_descriptografada[50];
-            descriptografar_senha(senha_criptografada, senha_descriptografada);
-            
-            if (strcmp(cpf_arquivo, cpf) == 0 && strcmp(senha_descriptografada, senha) == 0) {
+            if (strcmp(cpf_arquivo, cpf) == 0 && strcmp(senha_arquivo, senha) == 0) {
                 admin_logado = 0;
                 printf("Login realizado com sucesso! Bem-vindo, %s\n", nome);
                 fclose(file);
@@ -664,13 +695,10 @@ int fazer_login() {
     if (file != NULL) {
         char linha[500];
         while (fgets(linha, sizeof(linha), file)) {
-            char nome[100], cpf_arquivo[15], senha_criptografada[50];
-            sscanf(linha, "%*d|%[^|]|%*[^|]|%[^|]|%*[^|]|%*c|%s", nome, senha_criptografada, cpf_arquivo);
+            char nome[100], cpf_arquivo[15], senha_arquivo[50];
+            sscanf(linha, "%*d|%[^|]|%*[^|]|%[^|]|%*[^|]|%*c|%s", nome, senha_arquivo, cpf_arquivo);
             
-            char senha_descriptografada[50];
-            descriptografar_senha(senha_criptografada, senha_descriptografada);
-            
-            if (strcmp(cpf_arquivo, cpf) == 0 && strcmp(senha_descriptografada, senha) == 0) {
+            if (strcmp(cpf_arquivo, cpf) == 0 && strcmp(senha_arquivo, senha) == 0) {
                 admin_logado = 0;
                 printf("Login realizado com sucesso! Bem-vindo, %s\n", nome);
                 fclose(file);
@@ -689,6 +717,13 @@ int fazer_login() {
 }
 
 void excluir_aluno() {
+    if (!admin_logado) {
+        printf("Acesso negado! Apenas administradores podem excluir alunos.\n");
+        printf("\nPressione Enter para voltar ao menu...");
+        getchar();
+        return;
+    }
+    
     int matricula;
     printf("Digite a matricula do aluno a ser excluido (0 para cancelar): ");
     scanf("%d", &matricula);
@@ -747,22 +782,28 @@ void listar_alunos() {
     
     while (fgets(linha, sizeof(linha), file)) {
         int matricula;
-        char nome[100], email[100], cpf[15], data[15];
+        char nome[100], email[100], cpf[15], data[15], senha[50];
         char genero;
         
-        sscanf(linha, "%d|%[^|]|%[^|]|%*[^|]|%[^|]|%c|%s", &matricula, nome, email, data, &genero, cpf);
+        sscanf(linha, "%d|%[^|]|%[^|]|%[^|]|%[^|]|%c|%s", &matricula, nome, email, senha, data, &genero, cpf);
         
         char cpf_formatado[15];
         formatar_cpf(cpf, cpf_formatado);
-        printf("Matricula: %d | Nome: %s | Email: %s | CPF: %s | Nascimento: %s | Genero: %c\n",
-               matricula, nome, email, cpf_formatado, data, genero);
+        
+        if (admin_logado) {
+            printf("Matricula: %d | Nome: %s | Email: %s | Senha: %s | CPF: %s | Nascimento: %s | Genero: %c\n",
+                   matricula, nome, email, senha, cpf_formatado, data, genero);
+        } else {
+            printf("Matricula: %d | Nome: %s | Email: %s | CPF: %s | Nascimento: %s | Genero: %c\n",
+                   matricula, nome, email, cpf_formatado, data, genero);
+        }
         encontrou = 1;
     }
     fclose(file);
     
     if (!encontrou) {
         printf("Nenhum aluno cadastrado.\n");
-    } else {
+    } else if (admin_logado) {
         char opcao;
         printf("\nDeseja excluir algum aluno? (S/N): ");
         scanf(" %c", &opcao);
@@ -779,6 +820,13 @@ void listar_alunos() {
 }
 
 void excluir_professor() {
+    if (!admin_logado) {
+        printf("Acesso negado! Apenas administradores podem excluir professores.\n");
+        printf("\nPressione Enter para voltar ao menu...");
+        getchar();
+        return;
+    }
+    
     int matricula;
     printf("Digite a matricula do professor a ser excluido (0 para cancelar): ");
     scanf("%d", &matricula);
@@ -823,6 +871,13 @@ void excluir_professor() {
 }
 
 void excluir_turma() {
+    if (!admin_logado) {
+        printf("Acesso negado! Apenas administradores podem excluir turmas.\n");
+        printf("\nPressione Enter para voltar ao menu...");
+        getchar();
+        return;
+    }
+    
     int id;
     printf("Digite o ID da turma a ser excluida (0 para cancelar): ");
     scanf("%d", &id);
@@ -867,6 +922,13 @@ void excluir_turma() {
 }
 
 void excluir_aula() {
+    if (!admin_logado) {
+        printf("Acesso negado! Apenas administradores podem excluir aulas.\n");
+        printf("\nPressione Enter para voltar ao menu...");
+        getchar();
+        return;
+    }
+    
     int id;
     printf("Digite o ID da aula a ser excluida (0 para cancelar): ");
     scanf("%d", &id);
@@ -925,22 +987,28 @@ void listar_professores() {
     
     while (fgets(linha, sizeof(linha), file)) {
         int matricula;
-        char nome[100], email[100], cpf[15], materia[50];
+        char nome[100], email[100], cpf[15], materia[50], senha[50];
         char genero;
         
-        sscanf(linha, "%d|%[^|]|%[^|]|%*[^|]|%*[^|]|%c|%[^|]|%s", &matricula, nome, email, &genero, cpf, materia);
+        sscanf(linha, "%d|%[^|]|%[^|]|%[^|]|%*[^|]|%c|%[^|]|%[^\n]", &matricula, nome, email, senha, &genero, cpf, materia);
         
         char cpf_formatado[15];
         formatar_cpf(cpf, cpf_formatado);
-        printf("Matricula: %d | Nome: %s | Email: %s | CPF: %s | Genero: %c | Materia: %s\n",
-               matricula, nome, email, cpf_formatado, genero, materia);
+        
+        if (admin_logado) {
+            printf("Matricula: %d | Nome: %s | Email: %s | Senha: %s | CPF: %s | Genero: %c | Materia: %s\n",
+                   matricula, nome, email, senha, cpf_formatado, genero, materia);
+        } else {
+            printf("Matricula: %d | Nome: %s | Email: %s | CPF: %s | Genero: %c | Materia: %s\n",
+                   matricula, nome, email, cpf_formatado, genero, materia);
+        }
         encontrou = 1;
     }
     fclose(file);
     
     if (!encontrou) {
         printf("Nenhum professor cadastrado.\n");
-    } else {
+    } else if (admin_logado) {
         char opcao;
         printf("\nDeseja excluir algum professor? (S/N): ");
         scanf(" %c", &opcao);
@@ -983,7 +1051,7 @@ void listar_turmas() {
     
     if (!encontrou) {
         printf("Nenhuma turma cadastrada.\n");
-    } else {
+    } else if (admin_logado) {
         char opcao;
         printf("\nDeseja excluir alguma turma? (S/N): ");
         scanf(" %c", &opcao);
@@ -1046,7 +1114,7 @@ void listar_aulas() {
     
     if (!encontrou) {
         printf("Nenhuma aula registrada.\n");
-    } else {
+    } else if (admin_logado) {
         char opcao;
         printf("\nDeseja excluir alguma aula? (S/N): ");
         scanf(" %c", &opcao);
@@ -1062,23 +1130,155 @@ void listar_aulas() {
     getchar();
 }
 
+void menu_alunos() {
+    int opcao;
+    
+    while (1) {
+        printf("\n=== MENU ALUNOS ===\n");
+        if (admin_logado) {
+            printf("1. Cadastrar aluno\n");
+        }
+        printf("2. Listar alunos\n");
+        printf("0. Voltar ao menu principal\n");
+        printf("Escolha uma opcao: ");
+        
+        scanf("%d", &opcao);
+        limpar_buffer();
+        
+        switch (opcao) {
+            case 1:
+                if (admin_logado) {
+                    cadastrar_aluno();
+                } else {
+                    printf("Opcao invalida!\n");
+                }
+                break;
+            case 2:
+                listar_alunos();
+                break;
+            case 0:
+                return;
+            default:
+                printf("Opcao invalida!\n");
+        }
+    }
+}
+
+void menu_professores() {
+    int opcao;
+    
+    while (1) {
+        printf("\n=== MENU PROFESSORES ===\n");
+        if (admin_logado) {
+            printf("1. Cadastrar professor\n");
+        }
+        printf("2. Listar professores\n");
+        printf("0. Voltar ao menu principal\n");
+        printf("Escolha uma opcao: ");
+        
+        scanf("%d", &opcao);
+        limpar_buffer();
+        
+        switch (opcao) {
+            case 1:
+                if (admin_logado) {
+                    cadastrar_professor();
+                } else {
+                    printf("Opcao invalida!\n");
+                }
+                break;
+            case 2:
+                listar_professores();
+                break;
+            case 0:
+                return;
+            default:
+                printf("Opcao invalida!\n");
+        }
+    }
+}
+
+void menu_turmas() {
+    int opcao;
+    
+    while (1) {
+        printf("\n=== MENU TURMAS ===\n");
+        if (admin_logado) {
+            printf("1. Criar turma\n");
+        }
+        printf("2. Listar turmas\n");
+        printf("0. Voltar ao menu principal\n");
+        printf("Escolha uma opcao: ");
+        
+        scanf("%d", &opcao);
+        limpar_buffer();
+        
+        switch (opcao) {
+            case 1:
+                if (admin_logado) {
+                    criar_turma();
+                } else {
+                    printf("Opcao invalida!\n");
+                }
+                break;
+            case 2:
+                listar_turmas();
+                break;
+            case 0:
+                return;
+            default:
+                printf("Opcao invalida!\n");
+        }
+    }
+}
+
+void menu_aulas() {
+    int opcao;
+    
+    while (1) {
+        printf("\n=== MENU AULAS ===\n");
+        if (admin_logado) {
+            printf("1. Registrar aula\n");
+        }
+        printf("2. Listar aulas\n");
+        printf("0. Voltar ao menu principal\n");
+        printf("Escolha uma opcao: ");
+        
+        scanf("%d", &opcao);
+        limpar_buffer();
+        
+        switch (opcao) {
+            case 1:
+                if (admin_logado) {
+                    registrar_aula();
+                } else {
+                    printf("Opcao invalida!\n");
+                }
+                break;
+            case 2:
+                listar_aulas();
+                break;
+            case 0:
+                return;
+            default:
+                printf("Opcao invalida!\n");
+        }
+    }
+}
+
 void menu_principal() {
     int opcao;
     
     while (1) {
         printf("\n=== SISTEMA ESCOLAR ===\n");
-        printf("1. Login\n");
-        if (admin_logado) {
-            printf("2. Criar turma\n");
-            printf("3. Cadastrar aluno\n");
-            printf("4. Cadastrar professor\n");
-            printf("5. Registrar aula\n");
+        if (!admin_logado) {
+            printf("1. Login\n");
         }
-        printf("6. Listar turmas\n");
-        printf("7. Listar alunos\n");
-        printf("8. Listar professores\n");
-        printf("9. Listar aulas\n");
-        printf("10. Consultar horario de funcionamento\n");
+        printf("2. Alunos\n");
+        printf("3. Professores\n");
+        printf("4. Turmas\n");
+        printf("5. Aulas\n");
+        printf("6. Consultar horario de funcionamento\n");
         if (admin_logado) {
             printf("0. Logout\n");
             printf("\n[MODO ADMINISTRADOR ATIVO]\n");
@@ -1092,33 +1292,25 @@ void menu_principal() {
         
         switch (opcao) {
             case 1:
-                fazer_login();
+                if (!admin_logado) {
+                    fazer_login();
+                } else {
+                    printf("Opcao invalida!\n");
+                }
                 break;
             case 2:
-                criar_turma();
+                menu_alunos();
                 break;
             case 3:
-                cadastrar_aluno();
+                menu_professores();
                 break;
             case 4:
-                cadastrar_professor();
+                menu_turmas();
                 break;
             case 5:
-                registrar_aula();
+                menu_aulas();
                 break;
             case 6:
-                listar_turmas();
-                break;
-            case 7:
-                listar_alunos();
-                break;
-            case 8:
-                listar_professores();
-                break;
-            case 9:
-                listar_aulas();
-                break;
-            case 10:
                 consultar_horarios();
                 break;
             case 0:
