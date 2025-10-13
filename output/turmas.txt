@@ -1,3 +1,5 @@
-2|1 ano A|2026|1|Matutino|30
-3|2 ano A|2026|2|Vespertino|30
-4|1 Ano A|2026|1|Matutino|30
+12|1 Ano A|2026|1|Matutino|30
+14|1 Ano B|2026|1|Matutino|30
+16|1 Ano C|2026|1|Matutino|30
+17|2 Ano A|2025|2|Matutino|30
+18|2 Ano B|2025|2|Matutino|30
