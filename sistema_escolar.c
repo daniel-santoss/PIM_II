@@ -3,8 +3,6 @@
 #include <string.h>
 #include <locale.h>
 
-#define MAX_TURMAS 50
-#define MAX_AULAS 1000
 #define MAX_ALUNOS_POR_TURMA 30
 
 typedef struct {
@@ -41,7 +39,7 @@ typedef struct {
     int professor_matricula;
     int turma_id;
     char dia[15];
-    char hora[10];
+    char hora[20];
     char materia[50];
     int id;
 } Aula;
@@ -170,7 +168,7 @@ int turma_ja_existe(int serie, char letra, int ano, char *turno) {
 }
 
 int aluno_ja_tem_turma(int matricula) {
-    FILE *file = fopen("output/aluno_turma.txt", "r");
+    FILE *file = fopen("aluno_turma.txt", "r");
     if (file == NULL) return 0;
     
     char linha[100];
@@ -225,7 +223,7 @@ void editar_turmas() {
         return;
     }
     
-    FILE *file = fopen("output/turmas.txt", "r");
+    FILE *file = fopen("turmas.txt", "r");
     if (file == NULL) {
         printf("Nenhuma turma cadastrada.\n");
         printf("\nPressione Enter para voltar ao menu...");
@@ -263,7 +261,7 @@ void editar_turmas() {
     if (turma_id == 0) return;
     
     // Buscar e exibir informações da turma selecionada
-    FILE *turma_file = fopen("output/turmas.txt", "r");
+    FILE *turma_file = fopen("turmas.txt", "r");
     char turma_nome[100], turma_turno[20];
     int turma_ano = 0, turma_encontrada = 0;
     
@@ -296,17 +294,178 @@ void editar_turmas() {
     printf("\nTurma selecionada: %s | Ano: %d | Turno: %s\n", turma_nome, turma_ano, turma_turno);
     
     int opcao;
-    printf("\n=== EDITAR TURMA ===\n");
-    printf("1. Incluir aluno\n");
-    printf("2. Remover aluno\n");
-    printf("0. Cancelar\n");
-    printf("Escolha uma opcao: ");
-    scanf("%d", &opcao);
-    limpar_buffer();
+    while (1) {
+        printf("\n=== EDITAR TURMA ===\n");
+        printf("1. Alterar dados da turma\n");
+        printf("2. Incluir aluno\n");
+        printf("3. Remover aluno\n");
+        printf("0. Cancelar\n");
+        printf("Escolha uma opcao: ");
+        if (scanf("%d", &opcao) != 1) {
+            printf("Entrada invalida! Digite apenas numeros.\n");
+            limpar_buffer();
+            continue;
+        }
+        limpar_buffer();
+        if (opcao >= 0 && opcao <= 3) {
+            break;
+        }
+        printf("Opcao invalida! Digite 0, 1, 2 ou 3.\n");
+    }
     
-    if (opcao == 1) {
+    if (opcao == 0) {
+        return;
+    } else if (opcao == 1) {
+        // Alterar dados da turma
+        // Verificar se há aulas registradas na turma
+        FILE *aulas_check = fopen("aulas.txt", "r");
+        if (aulas_check != NULL) {
+            char linha_aula[500];
+            while (fgets(linha_aula, sizeof(linha_aula), aulas_check)) {
+                int id_aula, prof_aula, turma_aula;
+                sscanf(linha_aula, "%d|%d|%d|", &id_aula, &prof_aula, &turma_aula);
+                if (turma_aula == turma_id) {
+                    printf("Erro! A alteracao so e possivel caso nao haja registro de aula na turma.\n");
+                    fclose(aulas_check);
+                    printf("\nPressione Enter para voltar ao menu...");
+                    getchar();
+                    return;
+                }
+            }
+            fclose(aulas_check);
+        }
+        
+        do {
+            printf("\nO que deseja alterar?\n");
+            printf("1. Serie\n");
+            printf("2. Letra\n");
+            printf("3. Ano letivo\n");
+            printf("4. Turno\n");
+            printf("0. Cancelar\n");
+            
+            int opcao_alterar;
+            printf("Opcao: ");
+            scanf("%d", &opcao_alterar);
+            limpar_buffer();
+            
+            if (opcao_alterar == 0) return;
+        
+        // Buscar dados atuais da turma
+        FILE *turma_atual = fopen("turmas.txt", "r");
+        int serie_atual, ano_atual;
+        char nome_atual[100], turno_atual[20];
+        char letra_atual;
+        
+        if (turma_atual != NULL) {
+            char linha_ta[500];
+            while (fgets(linha_ta, sizeof(linha_ta), turma_atual)) {
+                int id_ta, ano_ta, serie_ta, cap_ta;
+                char nome_ta[100], turno_ta[20];
+                sscanf(linha_ta, "%d|%[^|]|%d|%d|%[^|]|%d", &id_ta, nome_ta, &ano_ta, &serie_ta, turno_ta, &cap_ta);
+                if (id_ta == turma_id) {
+                    strcpy(nome_atual, nome_ta);
+                    strcpy(turno_atual, turno_ta);
+                    ano_atual = ano_ta;
+                    serie_atual = serie_ta;
+                    letra_atual = nome_ta[strlen(nome_ta) - 1];
+                    break;
+                }
+            }
+            fclose(turma_atual);
+        }
+        
+        int nova_serie = serie_atual;
+        char nova_letra = letra_atual;
+        int novo_ano = ano_atual;
+        char novo_turno[20];
+        strcpy(novo_turno, turno_atual);
+        
+        if (opcao_alterar == 1) {
+            printf("\nSelecione a nova serie:\n");
+            printf("1 - 1 Ano\n2 - 2 Ano\n3 - 3 Ano\n0 - Cancelar\n");
+            printf("Opcao: ");
+            scanf("%d", &nova_serie);
+            limpar_buffer();
+            if (nova_serie == 0) return;
+        } else if (opcao_alterar == 2) {
+            printf("\nSelecione a nova letra (A-Z, 0 para cancelar): ");
+            scanf(" %c", &nova_letra);
+            limpar_buffer();
+            if (nova_letra == '0') return;
+            if (nova_letra >= 'a' && nova_letra <= 'z') {
+                nova_letra = nova_letra - 'a' + 'A';
+            }
+        } else if (opcao_alterar == 3) {
+            printf("\nSelecione o novo ano letivo:\n");
+            printf("1 - 2025\n2 - 2026\n0 - Cancelar\n");
+            printf("Opcao: ");
+            int opcao_ano;
+            scanf("%d", &opcao_ano);
+            limpar_buffer();
+            if (opcao_ano == 0) return;
+            novo_ano = (opcao_ano == 1) ? 2025 : 2026;
+        } else if (opcao_alterar == 4) {
+            printf("\nSelecione o novo turno:\n");
+            printf("1 - Matutino\n2 - Vespertino\n3 - Noturno\n0 - Cancelar\n");
+            printf("Opcao: ");
+            int opcao_turno;
+            scanf("%d", &opcao_turno);
+            limpar_buffer();
+            if (opcao_turno == 0) return;
+            if (opcao_turno == 1) strcpy(novo_turno, "Matutino");
+            else if (opcao_turno == 2) strcpy(novo_turno, "Vespertino");
+            else if (opcao_turno == 3) strcpy(novo_turno, "Noturno");
+        }
+        
+        // Verificar se nova configuração já existe
+        if (turma_ja_existe(nova_serie, nova_letra, novo_ano, novo_turno)) {
+            printf("Erro: Ja existe uma turma %d Ano %c no ano %d no periodo %s!\n", nova_serie, nova_letra, novo_ano, novo_turno);
+            printf("\nPressione Enter para voltar ao menu...");
+            getchar();
+            return;
+        }
+        
+        // Atualizar arquivo
+        FILE *turmas_file = fopen("turmas.txt", "r");
+        FILE *temp_turmas = fopen("temp_turmas.txt", "w");
+        
+        if (turmas_file != NULL && temp_turmas != NULL) {
+            char linha_turma[500];
+            while (fgets(linha_turma, sizeof(linha_turma), turmas_file)) {
+                int id_t, ano_t, serie_t, cap_t;
+                char nome_t[100], turno_t[20];
+                sscanf(linha_turma, "%d|%[^|]|%d|%d|%[^|]|%d", &id_t, nome_t, &ano_t, &serie_t, turno_t, &cap_t);
+                
+                if (id_t == turma_id) {
+                    char novo_nome[100];
+                    sprintf(novo_nome, "%d Ano %c", nova_serie, nova_letra);
+                    fprintf(temp_turmas, "%d|%s|%d|%d|%s|%d\n", id_t, novo_nome, novo_ano, nova_serie, novo_turno, cap_t);
+                } else {
+                    fprintf(temp_turmas, "%s", linha_turma);
+                }
+            }
+            fclose(turmas_file);
+            fclose(temp_turmas);
+            
+            remove("turmas.txt");
+            rename("temp_turmas.txt", "turmas.txt");
+            printf("Dados da turma alterados com sucesso!\n");
+        }
+        
+            char continuar;
+            printf("\nDeseja efetuar outra alteracao? (S/N): ");
+            scanf(" %c", &continuar);
+            limpar_buffer();
+            
+            if (continuar != 'S' && continuar != 's') {
+                printf("\nPressione Enter para voltar ao menu...");
+                getchar();
+                return;
+            }
+        } while (1);
+    } else if (opcao == 2) {
         // Incluir aluno
-        FILE *aluno_file = fopen("output/alunos.txt", "r");
+        FILE *aluno_file = fopen("alunos.txt", "r");
         if (aluno_file == NULL) {
             printf("Nenhum aluno cadastrado.\n");
             printf("\nPressione Enter para voltar ao menu...");
@@ -320,12 +479,13 @@ void editar_turmas() {
         
         while (fgets(linha_aluno, sizeof(linha_aluno), aluno_file)) {
             int matricula;
-            char nome[100];
+            char nome[100], email[100], data[15];
+            char genero;
             
-            sscanf(linha_aluno, "%d|%[^|]|", &matricula, nome);
+            sscanf(linha_aluno, "%d|%[^|]|%[^|]|%*[^|]|%[^|]|%c|", &matricula, nome, email, data, &genero);
             
             if (!aluno_ja_tem_turma(matricula)) {
-                printf("Matricula: %d | Nome: %s\n", matricula, nome);
+                printf("Matricula: %d | Nome: %s | Email: %s | Nascimento: %s | Genero: %c\n", matricula, nome, email, data, genero);
                 encontrou_aluno = 1;
             }
         }
@@ -344,11 +504,56 @@ void editar_turmas() {
         input[strcspn(input, "\n")] = 0;
         if (strcmp(input, "0") == 0) return;
         
+        // Validar entrada
+        if (strlen(input) == 0) {
+            printf("Entrada invalida! Digite pelo menos uma matricula.\n");
+            printf("\nPressione Enter para voltar ao menu...");
+            getchar();
+            return;
+        }
+        
         int matriculas[50], count = 0;
         char *token = strtok(input, ",");
         while (token != NULL && count < 50) {
-            matriculas[count++] = atoi(token);
+            // Remover espaços em branco
+            while (*token == ' ') token++;
+            int mat = atoi(token);
+            if (mat <= 0) {
+                printf("Matricula invalida ignorada: %s\n", token);
+            } else {
+                matriculas[count++] = mat;
+            }
             token = strtok(NULL, ",");
+        }
+        
+        if (count == 0) {
+            printf("Nenhuma matricula valida foi informada!\n");
+            printf("\nPressione Enter para voltar ao menu...");
+            getchar();
+            return;
+        }
+        
+        // Verificar capacidade da turma
+        int alunos_na_turma = 0;
+        FILE *at_count = fopen("aluno_turma.txt", "r");
+        if (at_count != NULL) {
+            char linha_count[100];
+            while (fgets(linha_count, sizeof(linha_count), at_count)) {
+                int mat_count, turma_count;
+                sscanf(linha_count, "%d|%d", &mat_count, &turma_count);
+                if (turma_count == turma_id) {
+                    alunos_na_turma++;
+                }
+            }
+            fclose(at_count);
+        }
+        
+        if (alunos_na_turma + count > MAX_ALUNOS_POR_TURMA) {
+            printf("Erro: A turma ja tem %d alunos. Nao e possivel incluir %d alunos (limite: %d).\n", 
+                   alunos_na_turma, count, MAX_ALUNOS_POR_TURMA);
+            printf("\nPressione Enter para voltar ao menu...");
+            getchar();
+            return;
         }
         
         int incluidos = 0;
@@ -361,7 +566,7 @@ void editar_turmas() {
             }
             
             // Verificar se aluno existe
-            FILE *check_file = fopen("output/alunos.txt", "r");
+            FILE *check_file = fopen("alunos.txt", "r");
             int aluno_existe = 0;
             char nome_aluno[100] = "";
             if (check_file != NULL) {
@@ -392,9 +597,9 @@ void editar_turmas() {
             printf("\n%d aluno(s) incluido(s) na turma!\n", incluidos);
         }
         
-    } else if (opcao == 2) {
+    } else if (opcao == 3) {
         // Remover aluno
-        FILE *at_file = fopen("output/aluno_turma.txt", "r");
+        FILE *at_file = fopen("aluno_turma.txt", "r");
         if (at_file == NULL) {
             printf("Nenhum aluno registrado em turmas.\n");
             printf("\nPressione Enter para voltar ao menu...");
@@ -412,7 +617,7 @@ void editar_turmas() {
             
             if (turma_at == turma_id) {
                 // Buscar nome do aluno
-                FILE *aluno_file = fopen("output/alunos.txt", "r");
+                FILE *aluno_file = fopen("alunos.txt", "r");
                 if (aluno_file != NULL) {
                     char linha_aluno[500];
                     while (fgets(linha_aluno, sizeof(linha_aluno), aluno_file)) {
@@ -444,11 +649,33 @@ void editar_turmas() {
         input[strcspn(input, "\n")] = 0;
         if (strcmp(input, "0") == 0) return;
         
+        // Validar entrada
+        if (strlen(input) == 0) {
+            printf("Entrada invalida! Digite pelo menos uma matricula.\n");
+            printf("\nPressione Enter para voltar ao menu...");
+            getchar();
+            return;
+        }
+        
         int matriculas[50], count = 0;
         char *token = strtok(input, ",");
         while (token != NULL && count < 50) {
-            matriculas[count++] = atoi(token);
+            // Remover espaços em branco
+            while (*token == ' ') token++;
+            int mat = atoi(token);
+            if (mat <= 0) {
+                printf("Matricula invalida ignorada: %s\n", token);
+            } else {
+                matriculas[count++] = mat;
+            }
             token = strtok(NULL, ",");
+        }
+        
+        if (count == 0) {
+            printf("Nenhuma matricula valida foi informada!\n");
+            printf("\nPressione Enter para voltar ao menu...");
+            getchar();
+            return;
         }
         
         int removidos = 0;
@@ -456,7 +683,7 @@ void editar_turmas() {
             int matricula_aluno = matriculas[i];
             
             // Verificar se aluno esta na turma
-            FILE *check_file = fopen("output/aluno_turma.txt", "r");
+            FILE *check_file = fopen("aluno_turma.txt", "r");
             int aluno_na_turma = 0;
             if (check_file != NULL) {
                 char linha_check[100];
@@ -474,7 +701,7 @@ void editar_turmas() {
             if (aluno_na_turma) {
                 // Buscar nome do aluno
                 char nome_aluno[100] = "";
-                FILE *nome_file = fopen("output/alunos.txt", "r");
+                FILE *nome_file = fopen("alunos.txt", "r");
                 if (nome_file != NULL) {
                     char linha_nome[500];
                     while (fgets(linha_nome, sizeof(linha_nome), nome_file)) {
@@ -936,7 +1163,7 @@ void registrar_aula() {
         printf("A materia sera definida automaticamente pelo professor\n\n");
         
         // Listar professores disponíveis
-        FILE *prof_file = fopen("output/professores.txt", "r");
+        FILE *prof_file = fopen("professores.txt", "r");
         if (prof_file == NULL) {
             printf("Nenhum professor cadastrado!\n");
             printf("\nPressione Enter para voltar ao menu...");
@@ -965,35 +1192,37 @@ void registrar_aula() {
             return;
         }
         
-        printf("\nDigite a matricula do professor (0 para cancelar): ");
-        scanf("%d", &nova_aula.professor_matricula);
-        if (nova_aula.professor_matricula == 0) return;
-        
-        // Verificar se professor existe
-        int professor_existe = 0;
-        prof_file = fopen("output/professores.txt", "r");
-        if (prof_file != NULL) {
-            while (fgets(linha_prof, sizeof(linha_prof), prof_file)) {
-                int mat_arquivo;
-                sscanf(linha_prof, "%d|", &mat_arquivo);
-                if (mat_arquivo == nova_aula.professor_matricula) {
-                    professor_existe = 1;
-                    break;
+        while (1) {
+            printf("\nDigite a matricula do professor (0 para cancelar): ");
+            scanf("%d", &nova_aula.professor_matricula);
+            limpar_buffer();
+            if (nova_aula.professor_matricula == 0) return;
+            
+            // Verificar se professor existe
+            int professor_existe = 0;
+            prof_file = fopen("professores.txt", "r");
+            if (prof_file != NULL) {
+                while (fgets(linha_prof, sizeof(linha_prof), prof_file)) {
+                    int mat_arquivo;
+                    sscanf(linha_prof, "%d|", &mat_arquivo);
+                    if (mat_arquivo == nova_aula.professor_matricula) {
+                        professor_existe = 1;
+                        break;
+                    }
                 }
+                fclose(prof_file);
             }
-            fclose(prof_file);
-        }
-        
-        if (!professor_existe) {
-            printf("Professor nao encontrado!\n");
-            printf("\nPressione Enter para voltar ao menu...");
-            getchar();
-            return;
+            
+            if (professor_existe) {
+                break;
+            } else {
+                printf("Matricula incorreta. Por favor, digite novamente.\n");
+            }
         }
     }
     
     // Listar turmas disponíveis
-    FILE *turma_file = fopen("output/turmas.txt", "r");
+    FILE *turma_file = fopen("turmas.txt", "r");
     if (turma_file == NULL) {
         printf("Nenhuma turma cadastrada!\n");
         printf("\nPressione Enter para voltar ao menu...");
@@ -1029,7 +1258,7 @@ void registrar_aula() {
     
     // Verificar se turma existe
     int turma_existe = 0;
-    turma_file = fopen("output/turmas.txt", "r");
+    turma_file = fopen("turmas.txt", "r");
     if (turma_file != NULL) {
         while (fgets(linha_turma, sizeof(linha_turma), turma_file)) {
             int id_arquivo;
@@ -1064,7 +1293,7 @@ void registrar_aula() {
     
     // Buscar turno da turma para mostrar horários disponíveis
     char turno_turma[20] = "";
-    FILE *turma_file2 = fopen("output/turmas.txt", "r");
+    FILE *turma_file2 = fopen("turmas.txt", "r");
     if (turma_file2 != NULL) {
         char linha_turma2[500];
         while (fgets(linha_turma2, sizeof(linha_turma2), turma_file2)) {
@@ -1113,7 +1342,7 @@ void registrar_aula() {
     }
     
     // Buscar matérias do professor selecionado
-    FILE *prof_file = fopen("output/professores.txt", "r");
+    FILE *prof_file = fopen("professores.txt", "r");
     char materias_professor[200] = "";
     if (prof_file != NULL) {
         char linha_prof[500];
@@ -1279,8 +1508,8 @@ void excluir_aluno() {
         token = strtok(NULL, ",");
     }
     
-    FILE *file = fopen("output/alunos.txt", "r");
-    FILE *temp = fopen("output/temp.txt", "w");
+    FILE *file = fopen("alunos.txt", "r");
+    FILE *temp = fopen("temp.txt", "w");
     
     if (file == NULL || temp == NULL) {
         printf("Erro ao abrir arquivos!\n");
@@ -1311,8 +1540,8 @@ void excluir_aluno() {
     fclose(file);
     fclose(temp);
     
-    remove("output/alunos.txt");
-    rename("output/temp.txt", "output/alunos.txt");
+    remove("alunos.txt");
+    rename("temp.txt", "alunos.txt");
     
     if (excluidos > 0) {
         printf("%d aluno(s) excluido(s) com sucesso!\n", excluidos);
@@ -1325,7 +1554,7 @@ void excluir_aluno() {
 }
 
 void listar_alunos() {
-    FILE *file = fopen("output/alunos.txt", "r");
+    FILE *file = fopen("alunos.txt", "r");
     if (file == NULL) {
         printf("Nenhum aluno cadastrado.\n");
         printf("\nPressione Enter para voltar ao menu...");
@@ -1387,8 +1616,8 @@ void excluir_professor() {
         token = strtok(NULL, ",");
     }
     
-    FILE *file = fopen("output/professores.txt", "r");
-    FILE *temp = fopen("output/temp.txt", "w");
+    FILE *file = fopen("professores.txt", "r");
+    FILE *temp = fopen("temp.txt", "w");
     
     if (file == NULL || temp == NULL) {
         printf("Erro ao abrir arquivos!\n");
@@ -1419,8 +1648,8 @@ void excluir_professor() {
     fclose(file);
     fclose(temp);
     
-    remove("output/professores.txt");
-    rename("output/temp.txt", "output/professores.txt");
+    remove("professores.txt");
+    rename("temp.txt", "professores.txt");
     
     if (excluidos > 0) {
         printf("%d professor(es) excluido(s) com sucesso!\n", excluidos);
@@ -1453,8 +1682,8 @@ void excluir_turma() {
         token = strtok(NULL, ",");
     }
     
-    FILE *file = fopen("output/turmas.txt", "r");
-    FILE *temp = fopen("output/temp.txt", "w");
+    FILE *file = fopen("turmas.txt", "r");
+    FILE *temp = fopen("temp.txt", "w");
     
     if (file == NULL || temp == NULL) {
         printf("Erro ao abrir arquivos!\n");
@@ -1485,8 +1714,8 @@ void excluir_turma() {
     fclose(file);
     fclose(temp);
     
-    remove("output/turmas.txt");
-    rename("output/temp.txt", "output/turmas.txt");
+    remove("turmas.txt");
+    rename("temp.txt", "turmas.txt");
     
     if (excluidos > 0) {
         printf("%d turma(s) excluida(s) com sucesso!\n", excluidos);
@@ -1498,15 +1727,15 @@ void excluir_turma() {
     getchar();
 }
 
-void excluir_aula() {
+void editar_aula() {
     if (!admin_logado && !matricula_professor_logado) {
-        printf("Acesso negado! Apenas administradores e professores podem excluir aulas.\n");
+        printf("Acesso negado! Apenas administradores e professores podem editar aulas.\n");
         printf("\nPressione Enter para voltar ao menu...");
         getchar();
         return;
     }
     
-    FILE *file = fopen("output/aulas.txt", "r");
+    FILE *file = fopen("aulas.txt", "r");
     if (file == NULL) {
         printf("Nenhuma aula registrada.\n");
         printf("\nPressione Enter para voltar ao menu...");
@@ -1520,13 +1749,503 @@ void excluir_aula() {
     
     while (fgets(linha, sizeof(linha), file)) {
         int id, prof_matricula, turma_id;
-        char dia[15], hora[15], materia[50];
+        char dia[15], hora[20], materia[50];
         
         sscanf(linha, "%d|%d|%d|%[^|]|%[^|]|%[^\n]", &id, &prof_matricula, &turma_id, dia, hora, materia);
         
         if (matricula_professor_logado == 0 || prof_matricula == matricula_professor_logado) {
-            printf("ID: %d | Professor: %d | Turma: %d | Dia: %s | Hora: %s | Materia: %s\n",
-                   id, prof_matricula, turma_id, dia, hora, materia);
+            char nome_turma[100] = "Turma nao encontrada";
+            FILE *turma_file = fopen("turmas.txt", "r");
+            if (turma_file != NULL) {
+                char linha_turma[500];
+                while (fgets(linha_turma, sizeof(linha_turma), turma_file)) {
+                    int id_turma;
+                    char nome_temp[100], turno_temp[20];
+                    sscanf(linha_turma, "%d|%[^|]|%*d|%*d|%[^|]|", &id_turma, nome_temp, turno_temp);
+                    if (id_turma == turma_id) {
+                        sprintf(nome_turma, "%s - %s", nome_temp, turno_temp);
+                        break;
+                    }
+                }
+                fclose(turma_file);
+            }
+            
+            char nome_professor[100] = "Professor nao encontrado";
+            FILE *prof_file = fopen("professores.txt", "r");
+            if (prof_file != NULL) {
+                char linha_prof[500];
+                while (fgets(linha_prof, sizeof(linha_prof), prof_file)) {
+                    int mat_prof;
+                    char nome_temp[100];
+                    sscanf(linha_prof, "%d|%[^|]|", &mat_prof, nome_temp);
+                    if (mat_prof == prof_matricula) {
+                        strcpy(nome_professor, nome_temp);
+                        break;
+                    }
+                }
+                fclose(prof_file);
+            }
+            
+            printf("ID: %d | Turma: %s | %s | %s | Data: %s | Horário: %s\n",
+                   id, nome_turma, nome_professor, materia, dia, hora);
+            encontrou = 1;
+        }
+    }
+    fclose(file);
+    
+    if (!encontrou) {
+        printf("Nenhuma aula registrada.\n");
+        printf("\nPressione Enter para voltar ao menu...");
+        getchar();
+        return;
+    }
+    
+    int aula_id;
+    while (1) {
+        printf("\nQual aula deseja alterar? (Digite o ID, 0 para cancelar): ");
+        scanf("%d", &aula_id);
+        limpar_buffer();
+        if (aula_id == 0) return;
+        
+        int aula_existe = 0;
+        FILE *check_aula = fopen("aulas.txt", "r");
+        if (check_aula != NULL) {
+            char linha_check[500];
+            while (fgets(linha_check, sizeof(linha_check), check_aula)) {
+                int id_check, prof_check;
+                sscanf(linha_check, "%d|%d|", &id_check, &prof_check);
+                if (id_check == aula_id && (matricula_professor_logado == 0 || prof_check == matricula_professor_logado)) {
+                    aula_existe = 1;
+                    break;
+                }
+            }
+            fclose(check_aula);
+        }
+        
+        if (aula_existe) {
+            break;
+        } else {
+            printf("ID incorreto. Por favor, digite novamente.\n");
+        }
+    }
+    
+    do {
+        printf("\nQuais os dados deseja alterar?\n");
+        printf("1. Turma\n");
+        if (admin_logado) printf("2. Professor\n");
+        printf("%d. Materia\n", admin_logado ? 3 : 2);
+        printf("%d. Data\n", admin_logado ? 4 : 3);
+        printf("%d. Horario\n", admin_logado ? 5 : 4);
+        printf("0. Cancelar\n");
+        
+        int opcao;
+        printf("Opcao: ");
+        scanf("%d", &opcao);
+        limpar_buffer();
+        
+        if (opcao == 0) break;
+        
+        FILE *aulas_file = fopen("aulas.txt", "r");
+        FILE *temp_file = fopen("temp_aulas.txt", "w");
+        
+        if (aulas_file == NULL || temp_file == NULL) {
+            printf("Erro ao abrir arquivos!\n");
+            return;
+        }
+        
+        char linha_aula[500];
+        int alterado = 0;
+        
+        while (fgets(linha_aula, sizeof(linha_aula), aulas_file)) {
+            int id, prof_mat, turma_id;
+            char dia[15], hora[20], mat[50];
+            
+            sscanf(linha_aula, "%d|%d|%d|%[^|]|%[^|]|%[^\n]", &id, &prof_mat, &turma_id, dia, hora, mat);
+            
+            if (id == aula_id && (matricula_professor_logado == 0 || prof_mat == matricula_professor_logado)) {
+                if (opcao == 1) {
+                    // Buscar turno da turma atual
+                    char turno_atual[20] = "";
+                    FILE *turma_atual = fopen("turmas.txt", "r");
+                    if (turma_atual != NULL) {
+                        char linha_ta[500];
+                        while (fgets(linha_ta, sizeof(linha_ta), turma_atual)) {
+                            int id_ta;
+                            char turno_ta[20];
+                            sscanf(linha_ta, "%d|%*[^|]|%*d|%*d|%[^|]|", &id_ta, turno_ta);
+                            if (id_ta == turma_id) {
+                                strcpy(turno_atual, turno_ta);
+                                break;
+                            }
+                        }
+                        fclose(turma_atual);
+                    }
+                    
+                    printf("\n=== TURMAS DISPONIVEIS ===\n");
+                    FILE *turmas = fopen("turmas.txt", "r");
+                    if (turmas != NULL) {
+                        char linha_t[500];
+                        while (fgets(linha_t, sizeof(linha_t), turmas)) {
+                            int id_t, ano, serie, cap;
+                            char nome_t[100], turno_t[20];
+                            sscanf(linha_t, "%d|%[^|]|%d|%d|%[^|]|%d", &id_t, nome_t, &ano, &serie, turno_t, &cap);
+                            printf("%d - %s (%do ano, %da serie, %s)\n", id_t, nome_t, ano, serie, turno_t);
+                        }
+                        fclose(turmas);
+                    }
+                    int nova_turma_id;
+                    while (1) {
+                        printf("Nova turma (ID, 0 para cancelar): ");
+                        scanf("%d", &nova_turma_id);
+                        limpar_buffer();
+                        if (nova_turma_id == 0) return;
+                        
+                        int turma_existe = 0;
+                        FILE *check_turma = fopen("turmas.txt", "r");
+                        if (check_turma != NULL) {
+                            char linha_check[500];
+                            while (fgets(linha_check, sizeof(linha_check), check_turma)) {
+                                int id_check;
+                                sscanf(linha_check, "%d|", &id_check);
+                                if (id_check == nova_turma_id) {
+                                    turma_existe = 1;
+                                    break;
+                                }
+                            }
+                            fclose(check_turma);
+                        }
+                        
+                        if (turma_existe) {
+                            break;
+                        } else {
+                            printf("ID incorreto. Por favor, digite novamente.\n");
+                        }
+                    }
+                    
+                    // Buscar turno da nova turma
+                    char turno_novo[20] = "";
+                    FILE *turma_nova = fopen("turmas.txt", "r");
+                    if (turma_nova != NULL) {
+                        char linha_tn[500];
+                        while (fgets(linha_tn, sizeof(linha_tn), turma_nova)) {
+                            int id_tn;
+                            char turno_tn[20];
+                            sscanf(linha_tn, "%d|%*[^|]|%*d|%*d|%[^|]|", &id_tn, turno_tn);
+                            if (id_tn == nova_turma_id) {
+                                strcpy(turno_novo, turno_tn);
+                                break;
+                            }
+                        }
+                        fclose(turma_nova);
+                    }
+                    
+                    turma_id = nova_turma_id;
+                    
+                    // Verificar se o período mudou
+                    if (strcmp(turno_atual, turno_novo) != 0) {
+                        printf("\nA turma alterada tem o periodo diferente da anterior. Por favor, selecione um novo horario\n");
+                        printf("\n=== HORARIOS DISPONIVEIS (%s) ===\n", turno_novo);
+                        if (strcmp(turno_novo, "Matutino") == 0) {
+                            printf("1. 07:00-07:50\n2. 07:50-08:40\n3. 08:40-09:30\n4. 10:00-10:50\n5. 10:50-11:40\n");
+                        } else if (strcmp(turno_novo, "Vespertino") == 0) {
+                            printf("1. 13:00-13:50\n2. 13:50-14:40\n3. 14:40-15:30\n4. 16:00-16:50\n5. 16:50-17:40\n");
+                        } else if (strcmp(turno_novo, "Noturno") == 0) {
+                            printf("1. 18:00-18:50\n2. 18:50-19:40\n3. 19:40-20:30\n4. 21:00-21:50\n5. 21:50-22:40\n");
+                        }
+                        
+                        int opcao_horario;
+                        printf("\nSelecione o horario (1-5, 0 para cancelar): ");
+                        scanf("%d", &opcao_horario);
+                        limpar_buffer();
+                        if (opcao_horario == 0) return;
+                        
+                        if (opcao_horario >= 1 && opcao_horario <= 5) {
+                            if (strcmp(turno_novo, "Matutino") == 0) {
+                                char horarios[][15] = {"07:00-07:50", "07:50-08:40", "08:40-09:30", "10:00-10:50", "10:50-11:40"};
+                                strcpy(hora, horarios[opcao_horario-1]);
+                            } else if (strcmp(turno_novo, "Vespertino") == 0) {
+                                char horarios[][15] = {"13:00-13:50", "13:50-14:40", "14:40-15:30", "16:00-16:50", "16:50-17:40"};
+                                strcpy(hora, horarios[opcao_horario-1]);
+                            } else if (strcmp(turno_novo, "Noturno") == 0) {
+                                char horarios[][15] = {"18:00-18:50", "18:50-19:40", "19:40-20:30", "21:00-21:50", "21:50-22:40"};
+                                strcpy(hora, horarios[opcao_horario-1]);
+                            }
+                        }
+                    } else {
+                        printf("Turma alterada com sucesso!\n");
+                    }
+                } else if (opcao == 2 && admin_logado) {
+                    printf("\n=== PROFESSORES DISPONIVEIS ===\n");
+                    FILE *profs = fopen("professores.txt", "r");
+                    if (profs != NULL) {
+                        char linha_p[500];
+                        while (fgets(linha_p, sizeof(linha_p), profs)) {
+                            int mat;
+                            char nome_p[100], materia_p[200];
+                            sscanf(linha_p, "%d|%[^|]|%*[^|]|%*[^|]|%*[^|]|%*c|%*[^|]|%[^\n]", &mat, nome_p, materia_p);
+                            printf("%d - %s (%s)\n", mat, nome_p, materia_p);
+                        }
+                        fclose(profs);
+                    }
+                    while (1) {
+                        printf("Novo professor (Matricula, 0 para cancelar): ");
+                        scanf("%d", &prof_mat);
+                        limpar_buffer();
+                        if (prof_mat == 0) return;
+                        
+                        int professor_existe = 0;
+                        FILE *check_prof = fopen("professores.txt", "r");
+                        if (check_prof != NULL) {
+                            char linha_check[500];
+                            while (fgets(linha_check, sizeof(linha_check), check_prof)) {
+                                int mat_check;
+                                sscanf(linha_check, "%d|", &mat_check);
+                                if (mat_check == prof_mat) {
+                                    professor_existe = 1;
+                                    break;
+                                }
+                            }
+                            fclose(check_prof);
+                        }
+                        
+                        if (professor_existe) {
+                            break;
+                        } else {
+                            printf("Matricula incorreta. Por favor, digite novamente.\n");
+                        }
+                    }
+                } else if ((opcao == 3 && admin_logado) || (opcao == 2 && !admin_logado)) {
+                    // Buscar matérias do professor
+                    char materias_professor[200] = "";
+                    FILE *prof_mat = fopen("professores.txt", "r");
+                    if (prof_mat != NULL) {
+                        char linha_pm[500];
+                        while (fgets(linha_pm, sizeof(linha_pm), prof_mat)) {
+                            int mat_pm;
+                            char materia_pm[200];
+                            sscanf(linha_pm, "%d|%*[^|]|%*[^|]|%*[^|]|%*[^|]|%*c|%*[^|]|%[^\n]", &mat_pm, materia_pm);
+                            if (mat_pm == prof_mat) {
+                                strcpy(materias_professor, materia_pm);
+                                break;
+                            }
+                        }
+                        fclose(prof_mat);
+                    }
+                    
+                    // Verificar se professor tem múltiplas matérias
+                    char materias_lista[10][50];
+                    int count_materias = 0;
+                    char *token_mat = strtok(materias_professor, ", ");
+                    while (token_mat != NULL && count_materias < 10) {
+                        strcpy(materias_lista[count_materias], token_mat);
+                        count_materias++;
+                        token_mat = strtok(NULL, ", ");
+                    }
+                    
+                    if (count_materias > 1) {
+                        printf("\nSelecione a nova materia:\n");
+                        for (int i = 0; i < count_materias; i++) {
+                            printf("%d. %s\n", i + 1, materias_lista[i]);
+                        }
+                        
+                        int opcao_materia;
+                        while (1) {
+                            printf("\nOpcao (1-%d, 0 para cancelar): ", count_materias);
+                            scanf("%d", &opcao_materia);
+                            limpar_buffer();
+                            if (opcao_materia == 0) return;
+                            
+                            if (opcao_materia >= 1 && opcao_materia <= count_materias) {
+                                strcpy(mat, materias_lista[opcao_materia - 1]);
+                                break;
+                            } else {
+                                printf("Opcao invalida! Digite um numero de 1 a %d.\n", count_materias);
+                            }
+                        }
+                    } else {
+                        printf("Nao e possivel realizar a alteracao, pois o professor so possui uma materia registrada.\n");
+                        fclose(aulas_file);
+                        fclose(temp_file);
+                        remove("temp_aulas.txt");
+                        continue;
+                    }
+                } else if ((opcao == 4 && admin_logado) || (opcao == 3 && !admin_logado)) {
+                    // Buscar ano letivo da turma
+                    int ano_turma = 0;
+                    FILE *turma_ano = fopen("turmas.txt", "r");
+                    if (turma_ano != NULL) {
+                        char linha_ta[500];
+                        while (fgets(linha_ta, sizeof(linha_ta), turma_ano)) {
+                            int id_ta, ano_ta;
+                            sscanf(linha_ta, "%d|%*[^|]|%d|", &id_ta, &ano_ta);
+                            if (id_ta == turma_id) {
+                                ano_turma = ano_ta;
+                                break;
+                            }
+                        }
+                        fclose(turma_ano);
+                    }
+                    
+                    while (1) {
+                        printf("Nova data (DD/MM/AAAA, 0 para cancelar): ");
+                        fgets(dia, 15, stdin);
+                        dia[strcspn(dia, "\n")] = 0;
+                        if (strcmp(dia, "0") == 0) return;
+                        
+                        if (!validar_data(dia)) {
+                            printf("Data invalida! Use o formato DD/MM/AAAA.\n");
+                            continue;
+                        }
+                        
+                        // Extrair ano da data inserida
+                        int ano_data = (dia[6] - '0') * 1000 + (dia[7] - '0') * 100 + (dia[8] - '0') * 10 + (dia[9] - '0');
+                        
+                        if (ano_data != ano_turma) {
+                            printf("Erro! O ano nao pode ser diferente do registrado na turma.\n");
+                            continue;
+                        }
+                        
+                        break;
+                    }
+                } else if ((opcao == 5 && admin_logado) || (opcao == 4 && !admin_logado)) {
+                    // Buscar turno da turma atual
+                    char turno_turma[20] = "";
+                    FILE *turma_horario = fopen("turmas.txt", "r");
+                    if (turma_horario != NULL) {
+                        char linha_th[500];
+                        while (fgets(linha_th, sizeof(linha_th), turma_horario)) {
+                            int id_th;
+                            char turno_th[20];
+                            sscanf(linha_th, "%d|%*[^|]|%*d|%*d|%[^|]|", &id_th, turno_th);
+                            if (id_th == turma_id) {
+                                strcpy(turno_turma, turno_th);
+                                break;
+                            }
+                        }
+                        fclose(turma_horario);
+                    }
+                    
+                    printf("\n=== HORARIOS DISPONIVEIS (%s) ===\n", turno_turma);
+                    if (strcmp(turno_turma, "Matutino") == 0) {
+                        printf("1. 07:00-07:50\n2. 07:50-08:40\n3. 08:40-09:30\n4. 10:00-10:50\n5. 10:50-11:40\n");
+                    } else if (strcmp(turno_turma, "Vespertino") == 0) {
+                        printf("1. 13:00-13:50\n2. 13:50-14:40\n3. 14:40-15:30\n4. 16:00-16:50\n5. 16:50-17:40\n");
+                    } else if (strcmp(turno_turma, "Noturno") == 0) {
+                        printf("1. 18:00-18:50\n2. 18:50-19:40\n3. 19:40-20:30\n4. 21:00-21:50\n5. 21:50-22:40\n");
+                    }
+                    
+                    int h_opcao;
+                    printf("Selecione o horario (1-5, 0 para cancelar): ");
+                    scanf("%d", &h_opcao);
+                    limpar_buffer();
+                    if (h_opcao == 0) return;
+                    
+                    if (h_opcao >= 1 && h_opcao <= 5) {
+                        if (strcmp(turno_turma, "Matutino") == 0) {
+                            char horarios[][15] = {"07:00-07:50", "07:50-08:40", "08:40-09:30", "10:00-10:50", "10:50-11:40"};
+                            strcpy(hora, horarios[h_opcao-1]);
+                        } else if (strcmp(turno_turma, "Vespertino") == 0) {
+                            char horarios[][15] = {"13:00-13:50", "13:50-14:40", "14:40-15:30", "16:00-16:50", "16:50-17:40"};
+                            strcpy(hora, horarios[h_opcao-1]);
+                        } else if (strcmp(turno_turma, "Noturno") == 0) {
+                            char horarios[][15] = {"18:00-18:50", "18:50-19:40", "19:40-20:30", "21:00-21:50", "21:50-22:40"};
+                            strcpy(hora, horarios[h_opcao-1]);
+                        }
+                    }
+                }
+                alterado = 1;
+            }
+            
+            fprintf(temp_file, "%d|%d|%d|%s|%s|%s\n", id, prof_mat, turma_id, dia, hora, mat);
+        }
+        
+        fclose(aulas_file);
+        fclose(temp_file);
+        
+        if (alterado) {
+            remove("aulas.txt");
+            rename("temp_aulas.txt", "aulas.txt");
+            printf("Aula alterada com sucesso!\n");
+        } else {
+            remove("temp_aulas.txt");
+        }
+        
+        char continuar;
+        printf("\nDeseja realizar uma nova alteracao? (S/N): ");
+        scanf(" %c", &continuar);
+        limpar_buffer();
+        
+        if (continuar != 'S' && continuar != 's') break;
+        
+    } while (1);
+    
+    printf("\nPressione Enter para voltar ao menu...");
+    getchar();
+}
+
+void excluir_aula() {
+    if (!admin_logado && !matricula_professor_logado) {
+        printf("Acesso negado! Apenas administradores e professores podem excluir aulas.\n");
+        printf("\nPressione Enter para voltar ao menu...");
+        getchar();
+        return;
+    }
+    
+    FILE *file = fopen("aulas.txt", "r");
+    if (file == NULL) {
+        printf("Nenhuma aula registrada.\n");
+        printf("\nPressione Enter para voltar ao menu...");
+        getchar();
+        return;
+    }
+    
+    printf("\n=== AULAS REGISTRADAS ===\n");
+    char linha[500];
+    int encontrou = 0;
+    
+    while (fgets(linha, sizeof(linha), file)) {
+        int id, prof_matricula, turma_id;
+        char dia[15], hora[20], materia[50];
+        
+        sscanf(linha, "%d|%d|%d|%[^|]|%[^|]|%[^\n]", &id, &prof_matricula, &turma_id, dia, hora, materia);
+        
+        if (matricula_professor_logado == 0 || prof_matricula == matricula_professor_logado) {
+            // Buscar nome da turma
+            char nome_turma[100] = "Turma nao encontrada";
+            FILE *turma_file = fopen("turmas.txt", "r");
+            if (turma_file != NULL) {
+                char linha_turma[500];
+                while (fgets(linha_turma, sizeof(linha_turma), turma_file)) {
+                    int id_turma;
+                    char nome_temp[100], turno_temp[20];
+                    sscanf(linha_turma, "%d|%[^|]|%*d|%*d|%[^|]|", &id_turma, nome_temp, turno_temp);
+                    if (id_turma == turma_id) {
+                        sprintf(nome_turma, "%s - %s", nome_temp, turno_temp);
+                        break;
+                    }
+                }
+                fclose(turma_file);
+            }
+            
+            // Buscar nome do professor
+            char nome_professor[100] = "Professor nao encontrado";
+            FILE *prof_file = fopen("professores.txt", "r");
+            if (prof_file != NULL) {
+                char linha_prof[500];
+                while (fgets(linha_prof, sizeof(linha_prof), prof_file)) {
+                    int mat_prof;
+                    char nome_temp[100];
+                    sscanf(linha_prof, "%d|%[^|]|", &mat_prof, nome_temp);
+                    if (mat_prof == prof_matricula) {
+                        strcpy(nome_professor, nome_temp);
+                        break;
+                    }
+                }
+                fclose(prof_file);
+            }
+            
+            printf("ID: %d | Turma: %s | %s | %s | Data: %s | Horario: %s\n",
+                   id, nome_turma, nome_professor, materia, dia, hora);
             encontrou = 1;
         }
     }
@@ -1552,8 +2271,8 @@ void excluir_aula() {
         token = strtok(NULL, ",");
     }
     
-    FILE *temp_file = fopen("output/temp.txt", "w");
-    file = fopen("output/aulas.txt", "r");
+    FILE *temp_file = fopen("temp.txt", "w");
+    file = fopen("aulas.txt", "r");
     
     if (file == NULL || temp_file == NULL) {
         printf("Erro ao abrir arquivos!\n");
@@ -1587,8 +2306,8 @@ void excluir_aula() {
     fclose(file);
     fclose(temp_file);
     
-    remove("output/aulas.txt");
-    rename("output/temp.txt", "output/aulas.txt");
+    remove("aulas.txt");
+    rename("temp.txt", "aulas.txt");
     
     if (excluidos > 0) {
         printf("%d aula(s) excluida(s) com sucesso!\n", excluidos);
@@ -1601,7 +2320,7 @@ void excluir_aula() {
 }
 
 void listar_professores() {
-    FILE *file = fopen("output/professores.txt", "r");
+    FILE *file = fopen("professores.txt", "r");
     if (file == NULL) {
         printf("Nenhum professor cadastrado.\n");
         printf("\nPressione Enter para voltar ao menu...");
@@ -1903,29 +2622,9 @@ void listar_aulas() {
     
     while (fgets(linha, sizeof(linha), file)) {
         int id, prof_matricula, turma_id;
-        char dia[15], hora[15], materia[50];
+        char dia[15], hora[20], materia[50];
         
-        // Usar strtok para separar os campos corretamente
-        char linha_copia[500];
-        strcpy(linha_copia, linha);
-        
-        char *token = strtok(linha_copia, "|");
-        if (token) id = atoi(token);
-        
-        token = strtok(NULL, "|");
-        if (token) prof_matricula = atoi(token);
-        
-        token = strtok(NULL, "|");
-        if (token) turma_id = atoi(token);
-        
-        token = strtok(NULL, "|");
-        if (token) strcpy(dia, token);
-        
-        token = strtok(NULL, "|");
-        if (token) strcpy(hora, token);
-        
-        token = strtok(NULL, "\n");
-        if (token) strcpy(materia, token);
+        sscanf(linha, "%d|%d|%d|%[^|]|%[^|]|%[^\n]", &id, &prof_matricula, &turma_id, dia, hora, materia);
         
         // Buscar nome do professor
         char nome_professor[100] = "Professor nao encontrado";
@@ -1961,7 +2660,7 @@ void listar_aulas() {
             fclose(turma_file);
         }
         
-        printf("ID: %d | %s | %s | %s | %s\n", id, nome_turma, hora, nome_professor, materia);
+        printf("ID: %d | Turma: %s | %s | %s | Data: %s | Horario: %s\n", id, nome_turma, nome_professor, materia, dia, hora);
         encontrou = 1;
     }
     fclose(file);
@@ -2129,12 +2828,14 @@ void menu_aulas() {
         printf("\n=== MENU AULAS ===\n");
         if (admin_logado) {
             printf("1. Registrar aula\n");
-            printf("2. Excluir aula\n");
-            printf("3. Listar aulas\n");
+            printf("2. Editar aula\n");
+            printf("3. Excluir aula\n");
+            printf("4. Listar aulas\n");
         } else {
             printf("1. Registrar aula\n");
-            printf("2. Excluir aula\n");
-            printf("3. Listar aulas\n");
+            printf("2. Editar aula\n");
+            printf("3. Excluir aula\n");
+            printf("4. Listar aulas\n");
         }
         printf("0. Voltar ao menu principal\n");
         printf("Escolha uma opcao: ");
@@ -2148,9 +2849,12 @@ void menu_aulas() {
                     registrar_aula();
                     break;
                 case 2:
-                    excluir_aula();
+                    editar_aula();
                     break;
                 case 3:
+                    excluir_aula();
+                    break;
+                case 4:
                     listar_aulas();
                     break;
                 case 0:
@@ -2164,9 +2868,12 @@ void menu_aulas() {
                     registrar_aula();
                     break;
                 case 2:
-                    excluir_aula();
+                    editar_aula();
                     break;
                 case 3:
+                    excluir_aula();
+                    break;
+                case 4:
                     listar_aulas();
                     break;
                 case 0:
