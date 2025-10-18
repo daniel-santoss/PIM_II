@@ -78,7 +78,5 @@ Aplicação console em C para gerenciamento de sistema escolar com as seguintes 
 - Matéria
 
 ## Limites do Sistema
-- Máximo 50 turmas
 - Máximo 30 alunos por turma
-- Máximo 1000 aulas
 - Sem limite para número total de alunos e professores (limitado apenas pela memória disponível)
