@@ -110,7 +110,121 @@ void formatar_cpf(char *cpf, char *cpf_formatado) {
     sprintf(cpf_formatado, "%.3s.%.3s.%.3s-%.2s", cpf, cpf+3, cpf+6, cpf+9);
 }
 
+int horario_ocupado(int turma_id, char *data, char *horario) {
+    FILE *file = fopen("aulas.txt", "r");
+    if (file == NULL) return 0;
+    
+    char linha[500];
+    while (fgets(linha, sizeof(linha), file)) {
+        int turma_arquivo;
+        char data_arquivo[15], horario_arquivo[20];
+        
+        sscanf(linha, "%*d|%*d|%d|%[^|]|%[^|]|%*[^\n]", &turma_arquivo, data_arquivo, horario_arquivo);
+        
+        if (turma_arquivo == turma_id && strcmp(data_arquivo, data) == 0 && strcmp(horario_arquivo, horario) == 0) {
+            fclose(file);
+            return 1;
+        }
+    }
+    
+    fclose(file);
+    return 0;
+}
 
+void exibir_horarios_disponiveis(char *turno, int turma_id, char *data) {
+    char horarios[5][15];
+    int total_horarios = 5;
+    
+    if (strcmp(turno, "Matutino") == 0) {
+        strcpy(horarios[0], "07:00-07:50");
+        strcpy(horarios[1], "07:50-08:40");
+        strcpy(horarios[2], "08:40-09:30");
+        strcpy(horarios[3], "10:00-10:50");
+        strcpy(horarios[4], "10:50-11:40");
+    } else if (strcmp(turno, "Vespertino") == 0) {
+        strcpy(horarios[0], "13:00-13:50");
+        strcpy(horarios[1], "13:50-14:40");
+        strcpy(horarios[2], "14:40-15:30");
+        strcpy(horarios[3], "16:00-16:50");
+        strcpy(horarios[4], "16:50-17:40");
+    } else if (strcmp(turno, "Noturno") == 0) {
+        strcpy(horarios[0], "18:00-18:50");
+        strcpy(horarios[1], "18:50-19:40");
+        strcpy(horarios[2], "19:40-20:30");
+        strcpy(horarios[3], "21:00-21:50");
+        strcpy(horarios[4], "21:50-22:40");
+    }
+    
+    printf("\n=== HORARIOS DISPONIVEIS (%s) ===\n", turno);
+    int opcoes_disponiveis[5];
+    int count_disponiveis = 0;
+    
+    for (int i = 0; i < total_horarios; i++) {
+        if (!horario_ocupado(turma_id, data, horarios[i])) {
+            printf("%d. %s\n", count_disponiveis + 1, horarios[i]);
+            opcoes_disponiveis[count_disponiveis] = i;
+            count_disponiveis++;
+        }
+    }
+    
+    if (count_disponiveis == 0) {
+        printf("Nenhum horario disponivel para esta data.\n");
+    }
+}
+
+int selecionar_horario_disponivel(char *turno, int turma_id, char *data, char *horario_selecionado) {
+    char horarios[5][15];
+    int total_horarios = 5;
+    
+    if (strcmp(turno, "Matutino") == 0) {
+        strcpy(horarios[0], "07:00-07:50");
+        strcpy(horarios[1], "07:50-08:40");
+        strcpy(horarios[2], "08:40-09:30");
+        strcpy(horarios[3], "10:00-10:50");
+        strcpy(horarios[4], "10:50-11:40");
+    } else if (strcmp(turno, "Vespertino") == 0) {
+        strcpy(horarios[0], "13:00-13:50");
+        strcpy(horarios[1], "13:50-14:40");
+        strcpy(horarios[2], "14:40-15:30");
+        strcpy(horarios[3], "16:00-16:50");
+        strcpy(horarios[4], "16:50-17:40");
+    } else if (strcmp(turno, "Noturno") == 0) {
+        strcpy(horarios[0], "18:00-18:50");
+        strcpy(horarios[1], "18:50-19:40");
+        strcpy(horarios[2], "19:40-20:30");
+        strcpy(horarios[3], "21:00-21:50");
+        strcpy(horarios[4], "21:50-22:40");
+    }
+    
+    int opcoes_disponiveis[5];
+    int count_disponiveis = 0;
+    
+    for (int i = 0; i < total_horarios; i++) {
+        if (!horario_ocupado(turma_id, data, horarios[i])) {
+            opcoes_disponiveis[count_disponiveis] = i;
+            count_disponiveis++;
+        }
+    }
+    
+    if (count_disponiveis == 0) {
+        return 0;
+    }
+    
+    int opcao;
+    while (1) {
+        printf("\nSelecione o horario (1-%d, 0 para cancelar): ", count_disponiveis);
+        scanf("%d", &opcao);
+        limpar_buffer();
+        if (opcao == 0) return -1;
+        
+        if (opcao >= 1 && opcao <= count_disponiveis) {
+            strcpy(horario_selecionado, horarios[opcoes_disponiveis[opcao-1]]);
+            return 1;
+        } else {
+            printf("Opcao invalida! Digite um numero de 1 a %d.\n", count_disponiveis);
+        }
+    }
+}
 
 int cpf_ja_existe(char *cpf) {
     FILE *file;
@@ -1278,6 +1392,22 @@ void registrar_aula() {
         return;
     }
     
+    // Buscar ano letivo da turma
+    int ano_turma = 0;
+    FILE *turma_ano_file = fopen("turmas.txt", "r");
+    if (turma_ano_file != NULL) {
+        char linha_ano[500];
+        while (fgets(linha_ano, sizeof(linha_ano), turma_ano_file)) {
+            int id_ano, ano_arquivo;
+            sscanf(linha_ano, "%d|%*[^|]|%d|", &id_ano, &ano_arquivo);
+            if (id_ano == nova_aula.turma_id) {
+                ano_turma = ano_arquivo;
+                break;
+            }
+        }
+        fclose(turma_ano_file);
+    }
+    
     while (1) {
         printf("Data da aula (DD/MM/AAAA): ");
         fgets(nova_aula.dia, 15, stdin);
@@ -1288,6 +1418,15 @@ void registrar_aula() {
             printf("Data invalida! Use o formato DD/MM/AAAA.\n");
             continue;
         }
+        
+        // Extrair ano da data inserida
+        int ano_data = (nova_aula.dia[6] - '0') * 1000 + (nova_aula.dia[7] - '0') * 100 + (nova_aula.dia[8] - '0') * 10 + (nova_aula.dia[9] - '0');
+        
+        if (ano_data != ano_turma) {
+            printf("Erro! O ano nao pode ser diferente do registrado na turma (%d).\n", ano_turma);
+            continue;
+        }
+        
         break;
     }
     
@@ -1308,37 +1447,16 @@ void registrar_aula() {
         fclose(turma_file2);
     }
     
-    printf("\n=== HORARIOS DISPONIVEIS (%s) ===\n", turno_turma);
-    if (strcmp(turno_turma, "Matutino") == 0) {
-        printf("1. 07:00-07:50\n2. 07:50-08:40\n3. 08:40-09:30\n4. 10:00-10:50\n5. 10:50-11:40\n");
-    } else if (strcmp(turno_turma, "Vespertino") == 0) {
-        printf("1. 13:00-13:50\n2. 13:50-14:40\n3. 14:40-15:30\n4. 16:00-16:50\n5. 16:50-17:40\n");
-    } else if (strcmp(turno_turma, "Noturno") == 0) {
-        printf("1. 18:00-18:50\n2. 18:50-19:40\n3. 19:40-20:30\n4. 21:00-21:50\n5. 21:50-22:40\n");
-    }
+    exibir_horarios_disponiveis(turno_turma, nova_aula.turma_id, nova_aula.dia);
     
-    int opcao_horario;
-    while (1) {
-        printf("\nSelecione o horario (1-5, 0 para cancelar): ");
-        scanf("%d", &opcao_horario);
-        limpar_buffer();
-        if (opcao_horario == 0) return;
-        
-        if (opcao_horario >= 1 && opcao_horario <= 5) {
-            if (strcmp(turno_turma, "Matutino") == 0) {
-                char horarios[][15] = {"07:00-07:50", "07:50-08:40", "08:40-09:30", "10:00-10:50", "10:50-11:40"};
-                strcpy(nova_aula.hora, horarios[opcao_horario-1]);
-            } else if (strcmp(turno_turma, "Vespertino") == 0) {
-                char horarios[][15] = {"13:00-13:50", "13:50-14:40", "14:40-15:30", "16:00-16:50", "16:50-17:40"};
-                strcpy(nova_aula.hora, horarios[opcao_horario-1]);
-            } else if (strcmp(turno_turma, "Noturno") == 0) {
-                char horarios[][15] = {"18:00-18:50", "18:50-19:40", "19:40-20:30", "21:00-21:50", "21:50-22:40"};
-                strcpy(nova_aula.hora, horarios[opcao_horario-1]);
-            }
-            break;
-        } else {
-            printf("Opcao invalida! Digite um numero de 1 a 5.\n");
-        }
+    int resultado = selecionar_horario_disponivel(turno_turma, nova_aula.turma_id, nova_aula.dia, nova_aula.hora);
+    if (resultado == 0) {
+        printf("Nenhum horario disponivel para esta data.\n");
+        printf("\nPressione Enter para voltar ao menu...");
+        getchar();
+        return;
+    } else if (resultado == -1) {
+        return;
     }
     
     // Buscar matérias do professor selecionado
@@ -1759,11 +1877,11 @@ void editar_aula() {
             if (turma_file != NULL) {
                 char linha_turma[500];
                 while (fgets(linha_turma, sizeof(linha_turma), turma_file)) {
-                    int id_turma;
+                    int id_turma, ano_turma;
                     char nome_temp[100], turno_temp[20];
-                    sscanf(linha_turma, "%d|%[^|]|%*d|%*d|%[^|]|", &id_turma, nome_temp, turno_temp);
+                    sscanf(linha_turma, "%d|%[^|]|%d|%*d|%[^|]|", &id_turma, nome_temp, &ano_turma, turno_temp);
                     if (id_turma == turma_id) {
-                        sprintf(nome_turma, "%s - %s", nome_temp, turno_temp);
+                        sprintf(nome_turma, "%s (%d) - %s", nome_temp, ano_turma, turno_temp);
                         break;
                     }
                 }
@@ -1944,32 +2062,22 @@ void editar_aula() {
                     // Verificar se o período mudou
                     if (strcmp(turno_atual, turno_novo) != 0) {
                         printf("\nA turma alterada tem o periodo diferente da anterior. Por favor, selecione um novo horario\n");
-                        printf("\n=== HORARIOS DISPONIVEIS (%s) ===\n", turno_novo);
-                        if (strcmp(turno_novo, "Matutino") == 0) {
-                            printf("1. 07:00-07:50\n2. 07:50-08:40\n3. 08:40-09:30\n4. 10:00-10:50\n5. 10:50-11:40\n");
-                        } else if (strcmp(turno_novo, "Vespertino") == 0) {
-                            printf("1. 13:00-13:50\n2. 13:50-14:40\n3. 14:40-15:30\n4. 16:00-16:50\n5. 16:50-17:40\n");
-                        } else if (strcmp(turno_novo, "Noturno") == 0) {
-                            printf("1. 18:00-18:50\n2. 18:50-19:40\n3. 19:40-20:30\n4. 21:00-21:50\n5. 21:50-22:40\n");
-                        }
+                        exibir_horarios_disponiveis(turno_novo, turma_id, dia);
                         
-                        int opcao_horario;
-                        printf("\nSelecione o horario (1-5, 0 para cancelar): ");
-                        scanf("%d", &opcao_horario);
-                        limpar_buffer();
-                        if (opcao_horario == 0) return;
-                        
-                        if (opcao_horario >= 1 && opcao_horario <= 5) {
-                            if (strcmp(turno_novo, "Matutino") == 0) {
-                                char horarios[][15] = {"07:00-07:50", "07:50-08:40", "08:40-09:30", "10:00-10:50", "10:50-11:40"};
-                                strcpy(hora, horarios[opcao_horario-1]);
-                            } else if (strcmp(turno_novo, "Vespertino") == 0) {
-                                char horarios[][15] = {"13:00-13:50", "13:50-14:40", "14:40-15:30", "16:00-16:50", "16:50-17:40"};
-                                strcpy(hora, horarios[opcao_horario-1]);
-                            } else if (strcmp(turno_novo, "Noturno") == 0) {
-                                char horarios[][15] = {"18:00-18:50", "18:50-19:40", "19:40-20:30", "21:00-21:50", "21:50-22:40"};
-                                strcpy(hora, horarios[opcao_horario-1]);
-                            }
+                        int resultado = selecionar_horario_disponivel(turno_novo, turma_id, dia, hora);
+                        if (resultado == 0) {
+                            printf("Nenhum horario disponivel para esta data.\n");
+                            fclose(aulas_file);
+                            fclose(temp_file);
+                            remove("temp_aulas.txt");
+                            printf("\nPressione Enter para voltar ao menu...");
+                            getchar();
+                            return;
+                        } else if (resultado == -1) {
+                            fclose(aulas_file);
+                            fclose(temp_file);
+                            remove("temp_aulas.txt");
+                            return;
                         }
                     } else {
                         printf("Turma alterada com sucesso!\n");
@@ -2125,32 +2233,22 @@ void editar_aula() {
                         fclose(turma_horario);
                     }
                     
-                    printf("\n=== HORARIOS DISPONIVEIS (%s) ===\n", turno_turma);
-                    if (strcmp(turno_turma, "Matutino") == 0) {
-                        printf("1. 07:00-07:50\n2. 07:50-08:40\n3. 08:40-09:30\n4. 10:00-10:50\n5. 10:50-11:40\n");
-                    } else if (strcmp(turno_turma, "Vespertino") == 0) {
-                        printf("1. 13:00-13:50\n2. 13:50-14:40\n3. 14:40-15:30\n4. 16:00-16:50\n5. 16:50-17:40\n");
-                    } else if (strcmp(turno_turma, "Noturno") == 0) {
-                        printf("1. 18:00-18:50\n2. 18:50-19:40\n3. 19:40-20:30\n4. 21:00-21:50\n5. 21:50-22:40\n");
-                    }
+                    exibir_horarios_disponiveis(turno_turma, turma_id, dia);
                     
-                    int h_opcao;
-                    printf("Selecione o horario (1-5, 0 para cancelar): ");
-                    scanf("%d", &h_opcao);
-                    limpar_buffer();
-                    if (h_opcao == 0) return;
-                    
-                    if (h_opcao >= 1 && h_opcao <= 5) {
-                        if (strcmp(turno_turma, "Matutino") == 0) {
-                            char horarios[][15] = {"07:00-07:50", "07:50-08:40", "08:40-09:30", "10:00-10:50", "10:50-11:40"};
-                            strcpy(hora, horarios[h_opcao-1]);
-                        } else if (strcmp(turno_turma, "Vespertino") == 0) {
-                            char horarios[][15] = {"13:00-13:50", "13:50-14:40", "14:40-15:30", "16:00-16:50", "16:50-17:40"};
-                            strcpy(hora, horarios[h_opcao-1]);
-                        } else if (strcmp(turno_turma, "Noturno") == 0) {
-                            char horarios[][15] = {"18:00-18:50", "18:50-19:40", "19:40-20:30", "21:00-21:50", "21:50-22:40"};
-                            strcpy(hora, horarios[h_opcao-1]);
-                        }
+                    int resultado = selecionar_horario_disponivel(turno_turma, turma_id, dia, hora);
+                    if (resultado == 0) {
+                        printf("Nenhum horario disponivel para esta data.\n");
+                        fclose(aulas_file);
+                        fclose(temp_file);
+                        remove("temp_aulas.txt");
+                        printf("\nPressione Enter para voltar ao menu...");
+                        getchar();
+                        return;
+                    } else if (resultado == -1) {
+                        fclose(aulas_file);
+                        fclose(temp_file);
+                        remove("temp_aulas.txt");
+                        return;
                     }
                 }
                 alterado = 1;
@@ -2216,11 +2314,11 @@ void excluir_aula() {
             if (turma_file != NULL) {
                 char linha_turma[500];
                 while (fgets(linha_turma, sizeof(linha_turma), turma_file)) {
-                    int id_turma;
+                    int id_turma, ano_turma;
                     char nome_temp[100], turno_temp[20];
-                    sscanf(linha_turma, "%d|%[^|]|%*d|%*d|%[^|]|", &id_turma, nome_temp, turno_temp);
+                    sscanf(linha_turma, "%d|%[^|]|%d|%*d|%[^|]|", &id_turma, nome_temp, &ano_turma, turno_temp);
                     if (id_turma == turma_id) {
-                        sprintf(nome_turma, "%s - %s", nome_temp, turno_temp);
+                        sprintf(nome_turma, "%s (%d) - %s", nome_temp, ano_turma, turno_temp);
                         break;
                     }
                 }
@@ -2465,6 +2563,85 @@ void listar_turmas() {
             printf("ID: %d | Nome: %s | Ano: %d | Serie: %d | Turno: %s | Capacidade: (%d/%d)\n",
                    turma_id, turma_nome, turma_ano, turma_serie, turma_turno, alunos_na_turma, turma_capacidade);
             
+            // Listar aulas da turma ordenadas por data e horário
+            printf("\n=== AULAS REGISTRADAS ===\n");
+            
+            // Carregar todas as aulas da turma em um array
+            typedef struct {
+                int id;
+                int prof_mat;
+                char dia[15];
+                char hora[20];
+                char materia[50];
+                char nome_prof[100];
+            } AulaTurma;
+            
+            AulaTurma aulas_turma[100];
+            int count_aulas = 0;
+            
+            FILE *aulas_file = fopen("aulas.txt", "r");
+            if (aulas_file != NULL) {
+                char linha_aula[500];
+                while (fgets(linha_aula, sizeof(linha_aula), aulas_file)) {
+                    int id_aula, prof_mat, turma_aula;
+                    char dia_aula[15], hora_aula[20], materia_aula[50];
+                    
+                    sscanf(linha_aula, "%d|%d|%d|%[^|]|%[^|]|%[^\n]", &id_aula, &prof_mat, &turma_aula, dia_aula, hora_aula, materia_aula);
+                    
+                    if (turma_aula == turma_id && count_aulas < 100) {
+                        aulas_turma[count_aulas].id = id_aula;
+                        aulas_turma[count_aulas].prof_mat = prof_mat;
+                        strcpy(aulas_turma[count_aulas].dia, dia_aula);
+                        strcpy(aulas_turma[count_aulas].hora, hora_aula);
+                        strcpy(aulas_turma[count_aulas].materia, materia_aula);
+                        
+                        // Buscar nome do professor
+                        strcpy(aulas_turma[count_aulas].nome_prof, "Professor nao encontrado");
+                        FILE *prof_file = fopen("professores.txt", "r");
+                        if (prof_file != NULL) {
+                            char linha_prof[500];
+                            while (fgets(linha_prof, sizeof(linha_prof), prof_file)) {
+                                int mat_prof;
+                                char nome_temp[100];
+                                sscanf(linha_prof, "%d|%[^|]|", &mat_prof, nome_temp);
+                                if (mat_prof == prof_mat) {
+                                    strcpy(aulas_turma[count_aulas].nome_prof, nome_temp);
+                                    break;
+                                }
+                            }
+                            fclose(prof_file);
+                        }
+                        count_aulas++;
+                    }
+                }
+                fclose(aulas_file);
+            }
+            
+            // Ordenar aulas por data e depois por horário
+            for (int i = 0; i < count_aulas - 1; i++) {
+                for (int j = i + 1; j < count_aulas; j++) {
+                    int cmp_data = strcmp(aulas_turma[i].dia, aulas_turma[j].dia);
+                    if (cmp_data > 0 || (cmp_data == 0 && strcmp(aulas_turma[i].hora, aulas_turma[j].hora) > 0)) {
+                        AulaTurma temp = aulas_turma[i];
+                        aulas_turma[i] = aulas_turma[j];
+                        aulas_turma[j] = temp;
+                    }
+                }
+            }
+            
+            // Exibir aulas ordenadas
+            if (count_aulas > 0) {
+                for (int i = 0; i < count_aulas; i++) {
+                    printf("ID: %d | %s | %s | %s | Data: %s\n", 
+                           aulas_turma[i].id, aulas_turma[i].nome_prof, aulas_turma[i].materia, 
+                           aulas_turma[i].hora, aulas_turma[i].dia);
+                }
+            } else {
+                printf("Nenhuma aula registrada nesta turma.\n");
+            }
+            
+            // Listar alunos da turma
+            
             // Listar alunos da turma
             if (alunos_na_turma > 0) {
                 printf("\n=== ALUNOS REGISTRADOS ===\n");
@@ -2649,11 +2826,11 @@ void listar_aulas() {
         if (turma_file != NULL) {
             char linha_turma[500];
             while (fgets(linha_turma, sizeof(linha_turma), turma_file)) {
-                int id_turma;
+                int id_turma, ano_turma;
                 char nome_temp[100], turno_temp[20];
-                sscanf(linha_turma, "%d|%[^|]|%*d|%*d|%[^|]|", &id_turma, nome_temp, turno_temp);
+                sscanf(linha_turma, "%d|%[^|]|%d|%*d|%[^|]|", &id_turma, nome_temp, &ano_turma, turno_temp);
                 if (id_turma == turma_id) {
-                    sprintf(nome_turma, "%s - %s", nome_temp, turno_temp);
+                    sprintf(nome_turma, "%s (%d) - %s", nome_temp, ano_turma, turno_temp);
                     break;
                 }
             }
