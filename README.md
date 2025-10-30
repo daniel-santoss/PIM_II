@@ -81,7 +81,7 @@ Aplicação console em C para gerenciamento de sistema escolar com as seguintes 
 ## Limites do Sistema
 - Máximo 30 alunos por turma
 - Sem limite para número total de alunos e professores (limitado apenas pela memória disponível)
-=======
+
 # Sistema de Gestão Escolar
 
 Sistema completo de gerenciamento escolar desenvolvido em linguagem C para controle de alunos, professores, turmas e aulas.
@@ -93,7 +93,7 @@ Este sistema foi desenvolvido como parte do **Projeto Integrado Multidisciplinar
 ## Funcionalidades Principais
 
 ### Sistema de Autenticação
-- **Administrador**: CPF: 12345678909 | Senha: admin
+- **Administrador**: Login com CPF e Senha cadastrados
 - **Alunos**: Login com CPF e senha cadastrados
 - **Professores**: Login com CPF e senha cadastrados
 
