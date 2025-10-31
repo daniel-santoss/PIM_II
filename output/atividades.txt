@@ -1,1 +1,2 @@
-4|10000013|1|PIM II|Trabalhos|Portugues|10|N|Atividade ads 2 semestre
+6|10000013|1|Grupo|Avaliacoes|Portugues|10|S|
+7|10000013|1|Atividade Individual|Atividades diversas|Portugues|9|N|Atividade Individual para testes

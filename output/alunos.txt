@@ -1,1 +1,5 @@
-10000012|Da|da@gmail.com|da123|01/01/2000|M|12894857433
+10000012|Daniel Vinicius|da@gmail.com|da123|03/02/2007|M|12894857433
+10000012|Matheus Carvalho|math@gmail.com|math123|27/11/2008|M|11234567890
+10000012|Jhonata Rodrigo|jhow@gmail.com|jhow123|16/05/1995|M|12234567890
+10000012|Julia Ester|da@gmail.com|ju123|25/01/2000|F|12334567890
+10000012|Victor Hugo|vi@gmail.com|vi123|01/01/2000|M|12344567890
