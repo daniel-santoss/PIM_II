@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Sistema Escolar em C
 
 ## Descrição
