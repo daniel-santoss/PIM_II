@@ -1,245 +1,284 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
+// Bibliotecas necessárias para o sistema
+#include <stdio.h>    // Entrada/saída padrão (printf, scanf, FILE)
+#include <stdlib.h>   // Funções gerais (malloc, free, exit)
+#include <string.h>   // Manipulação de strings (strcpy, strcmp, strlen)
+#include <ctype.h>    // Funções de caracteres (isdigit, toupper)
 
-// Estruturas
+// Estruturas de dados do sistema
+
+// Estrutura para armazenar dados de uma turma
 typedef struct {
-    int id;
-    char nome[100];
-    int serie;
-    char turno[20];
-    int ano;
+    int id;           // Identificador único da turma
+    char nome[100];   // Nome da turma (ex: "1º A")
+    int serie;        // Série/ano escolar (1, 2 ou 3)
+    char turno[20];   // Turno (Matutino, Vespertino, Noturno)
+    int ano;          // Ano letivo
 } Turma;
 
+// Estrutura para armazenar dados de um aluno
 typedef struct {
-    int matricula;
-    char nome[100];
-    char cpf[12];
-    char senha[20];
-    int turma_id;
+    int matricula;    // Número de matrícula único
+    char nome[100];   // Nome completo do aluno
+    char cpf[12];     // CPF (11 dígitos + \0)
+    char senha[20];   // Senha para login
+    int turma_id;     // ID da turma que o aluno pertence
 } Aluno;
 
+// Estrutura para armazenar dados de um professor
 typedef struct {
-    int matricula;
-    char nome[100];
-    char cpf[12];
-    char senha[20];
-    char materias[200];
+    int matricula;      // Número de matrícula único
+    char nome[100];     // Nome completo do professor
+    char cpf[12];       // CPF (11 dígitos + \0)
+    char senha[20];     // Senha para login
+    char materias[200]; // Matérias que o professor leciona (separadas por vírgula)
 } Professor;
 
+// Estrutura para armazenar dados de uma aula
 typedef struct {
-    int id;
-    int turma_id;
-    int professor_matricula;
-    char disciplina[50];
-    char data[11];
-    char horario[15];
+    int id;                   // Identificador único da aula
+    int turma_id;             // ID da turma que terá a aula
+    int professor_matricula;  // Matrícula do professor responsável
+    char disciplina[50];      // Matéria da aula
+    char data[11];            // Data da aula (DD/MM/AAAA)
+    char horario[15];         // Horário da aula (HH:MM-HH:MM)
 } Aula;
 
+// Estrutura para armazenar dados de uma atividade avaliativa
 typedef struct {
-    int id;
-    char tipo[50];
-    char nome[100];
-    int turma_id;
-    int professor_matricula;
-    char disciplina[50];
-    char data[11];
+    int id;                   // Identificador único da atividade
+    char tipo[50];            // Tipo (Prova, Trabalho, Exercício, etc.)
+    char nome[100];           // Nome/descrição da atividade
+    int turma_id;             // ID da turma que fará a atividade
+    int professor_matricula;  // Matrícula do professor responsável
+    char disciplina[50];      // Matéria da atividade
+    char data[11];            // Data de aplicação (DD/MM/AAAA)
 } Atividade;
 
+// Estrutura para armazenar notas dos alunos
 typedef struct {
-    int id;
-    int atividade_id;
-    int aluno_matricula;
-    float nota;
+    int id;                // Identificador único da nota
+    int atividade_id;      // ID da atividade avaliada
+    int aluno_matricula;   // Matrícula do aluno
+    float nota;            // Nota obtida (0.0 a 10.0)
 } Nota;
 
-// Variáveis globais
-int admin_logado = 0;
-int aluno_logado = 0;
-int professor_logado = 0;
-int matricula_atual = 0;
+// Variáveis globais para controle de sessão
+int admin_logado = 0;      // Flag: 1 se admin está logado, 0 caso contrário
+int aluno_logado = 0;      // Flag: 1 se aluno está logado, 0 caso contrário
+int professor_logado = 0;  // Flag: 1 se professor está logado, 0 caso contrário
+int matricula_atual = 0;   // Armazena a matrícula do usuário logado
 
-// Protótipos
-void limpar_buffer();
-void pausar();
-int fazer_login();
-void menu_admin();
-void menu_aluno();
-void menu_professor();
-int validar_cpf(char *cpf);
-int gerar_id(char *arquivo);
-int confirmar_operacao(char *mensagem);
-int validar_id_positivo(int id);
-int verificar_arquivo_existe(char *arquivo, char *mensagem_erro);
+// Declaração de funções (protótipos)
 
-// Funções de Turma
-void cadastrar_turma();
-void listar_turmas();
-void excluir_turma();
+// Funções utilitárias
+void limpar_buffer();                                              // Limpa buffer do teclado
+void pausar();                                                     // Pausa execução até Enter
+int fazer_login();                                                 // Realiza login no sistema
+void menu_admin();                                                 // Menu do administrador
+void menu_aluno();                                                 // Menu do aluno
+void menu_professor();                                             // Menu do professor
+int validar_cpf(char *cpf);                                        // Valida formato do CPF
+int gerar_id(char *arquivo);                                       // Gera próximo ID disponível
+int confirmar_operacao(char *mensagem);                            // Confirma operação crítica
+int validar_id_positivo(int id);                                   // Valida se ID é positivo
+int verificar_arquivo_existe(char *arquivo, char *mensagem_erro);  // Verifica se arquivo existe
 
-// Funções de Aluno
-void cadastrar_aluno();
-void listar_alunos();
-void excluir_aluno();
-void minha_turma();
+// Funções de gerenciamento de turmas
+void cadastrar_turma();  // Cadastra nova turma
+void listar_turmas();    // Lista todas as turmas
+void excluir_turma();    // Remove turma do sistema
 
-// Funções de Professor
-void cadastrar_professor();
-void listar_professores();
-void excluir_professor();
+// Funções de gerenciamento de alunos
+void cadastrar_aluno();  // Cadastra novo aluno
+void listar_alunos();    // Lista todos os alunos
+void excluir_aluno();    // Remove aluno do sistema
+void minha_turma();      // Mostra turma do aluno logado
 
-// Funções de Aula
-void registrar_aula();
-void listar_aulas();
-void excluir_aula();
-void minhas_aulas();
+// Funções de gerenciamento de professores
+void cadastrar_professor();  // Cadastra novo professor
+void listar_professores();   // Lista todos os professores
+void excluir_professor();    // Remove professor do sistema
 
-// Funções de Atividade
-void lancar_atividade();
-void consultar_atividades();
-void excluir_atividade();
+// Funções de gerenciamento de aulas
+void registrar_aula();  // Registra nova aula
+void listar_aulas();    // Lista todas as aulas
+void excluir_aula();    // Remove aula do sistema
+void minhas_aulas();    // Mostra aulas do professor logado
 
-// Funções de Nota
-void lancar_notas();
-void consultar_notas();
-void excluir_nota();
-void minhas_notas();
+// Funções de gerenciamento de atividades
+void lancar_atividade();      // Lança nova atividade avaliativa
+void consultar_atividades();  // Consulta atividades cadastradas
+void excluir_atividade();     // Remove atividade do sistema
 
-// Implementações
+// Funções de gerenciamento de notas
+void lancar_notas();     // Lança notas para atividades
+void consultar_notas();  // Consulta notas cadastradas
+void excluir_nota();     // Remove nota do sistema
+void minhas_notas();     // Mostra notas do aluno logado
+
+// IMPLEMENTAÇÃO DAS FUNÇÕES
+
+// Limpa o buffer de entrada do teclado
+// Remove caracteres extras após scanf
 void limpar_buffer() {
     int c;
-    while ((c = getchar()) != '\n' && c != EOF);
+    while ((c = getchar()) != '\n' && c != EOF);  // Lê até encontrar \n ou EOF
 }
 
+// Pausa a execução até o usuário pressionar Enter
+// Usado para dar tempo de ler mensagens na tela
 void pausar() {
     printf("\nPressione Enter para continuar...");
-    getchar();
+    getchar();  // Aguarda Enter
 }
 
+// Valida se o CPF tem formato correto (11 dígitos numéricos)
+// Retorna 1 se válido, 0 se inválido
 int validar_cpf(char *cpf) {
-    if (strlen(cpf) != 11) return 0;
+    if (strlen(cpf) != 11) return 0;  // Deve ter exatamente 11 caracteres
     for (int i = 0; i < 11; i++) {
-        if (!isdigit(cpf[i])) return 0;
+        if (!isdigit(cpf[i])) return 0;  // Todos devem ser dígitos
     }
-    return 1;
+    return 1;  // CPF válido
 }
 
+// Valida se a disciplina informada existe no sistema
+// Padroniza o nome da disciplina e retorna 1 se válida, 0 se inválida
 int validar_disciplina(char *disciplina) {
+    // Lista de disciplinas aceitas pelo sistema
     char disciplinas_validas[][20] = {
         "Matematica", "Ciencias", "Geografia", "Historia", 
         "Filosofia", "Sociologia", "Portugues", "Ingles"
     };
     int total_disciplinas = 8;
     
+    // Verifica se a disciplina está na lista (ignora maiúsculas/minúsculas)
     for (int i = 0; i < total_disciplinas; i++) {
         if (strcasecmp(disciplina, disciplinas_validas[i]) == 0) {
-            strcpy(disciplina, disciplinas_validas[i]); // Padronizar
-            return 1;
+            strcpy(disciplina, disciplinas_validas[i]); // Padroniza o nome
+            return 1;  // Disciplina válida
         }
     }
-    return 0;
+    return 0;  // Disciplina não encontrada
 }
 
+// Verifica se um professor leciona determinada disciplina
+// Retorna 1 se leciona, 0 se não leciona
 int professor_leciona_disciplina(int matricula_prof, char *disciplina) {
     FILE *file = fopen("professores.txt", "r");
-    if (file == NULL) return 0;
+    if (file == NULL) return 0;  // Arquivo não existe
     
     char linha[400];
     while (fgets(linha, sizeof(linha), file)) {
         int mat;
         char materias[200];
+        // Lê matrícula e lista de matérias do professor
         sscanf(linha, "%d|%*[^|]|%*[^|]|%*[^|]|%[^\n]", &mat, materias);
         
         if (mat == matricula_prof) {
-            // Verificar se a disciplina está nas matérias do professor
+            // Divide a string de matérias por vírgula e espaço
             char *token = strtok(materias, ", ");
             while (token != NULL) {
                 if (strcasecmp(token, disciplina) == 0) {
                     fclose(file);
-                    return 1;
+                    return 1;  // Professor leciona a disciplina
                 }
-                token = strtok(NULL, ", ");
+                token = strtok(NULL, ", ");  // Próxima matéria
             }
-            break;
+            break;  // Professor encontrado, mas não leciona a disciplina
         }
     }
     fclose(file);
-    return 0;
+    return 0;  // Professor não leciona a disciplina
 }
 
+// Obtém o turno de uma turma específica pelo ID
+// Preenche a string turno com o resultado
 void obter_turno_turma(int turma_id, char *turno) {
     FILE *file = fopen("turmas.txt", "r");
-    strcpy(turno, "");
+    strcpy(turno, "");  // Inicializa como vazio
     if (file != NULL) {
         char linha[200];
         while (fgets(linha, sizeof(linha), file)) {
             int id;
             char turno_arquivo[20];
+            // Lê ID e turno da linha
             sscanf(linha, "%d|%*[^|]|%*d|%[^|]", &id, turno_arquivo);
             if (id == turma_id) {
-                strcpy(turno, turno_arquivo);
-                break;
+                strcpy(turno, turno_arquivo);  // Copia o turno encontrado
+                break;  // Para a busca
             }
         }
         fclose(file);
     }
 }
 
+// Obtém o nome de uma turma específica pelo ID
+// Preenche a string nome com o resultado
 void obter_nome_turma(int turma_id, char *nome) {
     FILE *file = fopen("turmas.txt", "r");
-    strcpy(nome, "Turma nao encontrada");
+    strcpy(nome, "Turma nao encontrada");  // Valor padrão se não encontrar
     if (file != NULL) {
         char linha[200];
         while (fgets(linha, sizeof(linha), file)) {
             int id;
             char nome_arquivo[100];
+            // Lê ID e nome da turma
             sscanf(linha, "%d|%[^|]", &id, nome_arquivo);
             if (id == turma_id) {
-                strcpy(nome, nome_arquivo);
-                break;
+                strcpy(nome, nome_arquivo);  // Copia o nome encontrado
+                break;  // Para a busca
             }
         }
         fclose(file);
     }
 }
 
+// Obtém dados completos de uma turma (nome, turno, ano) pelo ID
+// Formata os dados em uma string legível
 void obter_dados_completos_turma(int turma_id, char *dados_completos) {
     FILE *file = fopen("turmas.txt", "r");
-    strcpy(dados_completos, "Turma nao encontrada");
+    strcpy(dados_completos, "Turma nao encontrada");  // Valor padrão
     if (file != NULL) {
         char linha[200];
         while (fgets(linha, sizeof(linha), file)) {
             int id, serie, ano;
             char nome[100], turno[20];
+            // Lê todos os dados da turma
             sscanf(linha, "%d|%[^|]|%d|%[^|]|%d", &id, nome, &serie, turno, &ano);
             if (id == turma_id) {
+                // Formata os dados principais
                 sprintf(dados_completos, "%s | %s | %d", nome, turno, ano);
-                break;
+                break;  // Para a busca
             }
         }
         fclose(file);
     }
 }
 
+// Obtém o nome de um professor pela matrícula
+// Preenche a string nome com o resultado
 void obter_nome_professor(int matricula_prof, char *nome) {
     FILE *file = fopen("professores.txt", "r");
-    strcpy(nome, "Professor nao encontrado");
+    strcpy(nome, "Professor nao encontrado");  // Valor padrão
     if (file != NULL) {
         char linha[400];
         while (fgets(linha, sizeof(linha), file)) {
             int mat;
             char nome_arquivo[100];
+            // Lê matrícula e nome do professor
             sscanf(linha, "%d|%[^|]", &mat, nome_arquivo);
             if (mat == matricula_prof) {
-                strcpy(nome, nome_arquivo);
-                break;
+                strcpy(nome, nome_arquivo);  // Copia o nome encontrado
+                break;  // Para a busca
             }
         }
         fclose(file);
     }
 }
 
+// Gera um novo ID único para inserção em arquivo
+// Lê o arquivo e retorna o próximo ID disponível (maior ID + 1)
 int gerar_id(char *arquivo) {
     FILE *file = fopen(arquivo, "r");
     int maior_id = 0;
@@ -248,53 +287,62 @@ int gerar_id(char *arquivo) {
     if (file != NULL) {
         while (fgets(linha, sizeof(linha), file)) {
             int id;
-            sscanf(linha, "%d", &id);
-            if (id > maior_id) maior_id = id;
+            sscanf(linha, "%d", &id);  // Lê o primeiro número da linha (ID)
+            if (id > maior_id) maior_id = id;  // Atualiza o maior ID encontrado
         }
         fclose(file);
     }
-    return maior_id + 1;
+    return maior_id + 1;  // Retorna o próximo ID disponível
 }
 
+// Solicita confirmação do usuário para operações críticas
+// Retorna 1 se confirmado (S), 0 se cancelado (N)
 int confirmar_operacao(char *mensagem) {
     char confirmacao;
     do {
-        printf("%s (S/N): ", mensagem);
+        printf("%s (S/N): ", mensagem);  // Exibe a mensagem de confirmação
         scanf(" %c", &confirmacao);
         limpar_buffer();
-        confirmacao = toupper(confirmacao);
+        confirmacao = toupper(confirmacao);  // Converte para maiúscula
         
+        // Valida se a resposta é S ou N
         if (confirmacao != 'S' && confirmacao != 'N') {
             printf("Erro: Digite S para Sim ou N para Nao!\n");
         }
-    } while (confirmacao != 'S' && confirmacao != 'N');
+    } while (confirmacao != 'S' && confirmacao != 'N');  // Repete até resposta válida
     
-    return confirmacao == 'S';
+    return confirmacao == 'S';  // Retorna 1 se confirmado, 0 se cancelado
 }
 
+// Valida se um ID é positivo e diferente de zero
+// ID = 0 significa cancelamento, ID < 1 é inválido
 int validar_id_positivo(int id) {
     if (id == 0) {
-        printf("Operacao cancelada.\n");
+        printf("Operacao cancelada.\n");  // Zero significa cancelar
         return 0;
     }
     if (id < 1) {
-        printf("Erro: ID deve ser um numero positivo!\n");
+        printf("Erro: ID deve ser um numero positivo!\n");  // Negativo é inválido
         return 0;
     }
-    return 1;
+    return 1;  // ID válido
 }
 
+// Verifica se um arquivo existe e pode ser aberto para leitura
+// Exibe mensagem de erro personalizada se não existir
 int verificar_arquivo_existe(char *arquivo, char *mensagem_erro) {
     FILE *file = fopen(arquivo, "r");
     if (file == NULL) {
-        printf("%s\n", mensagem_erro);
+        printf("%s\n", mensagem_erro);  // Exibe mensagem de erro
         pausar();
-        return 0;
+        return 0;  // Arquivo não existe
     }
     fclose(file);
-    return 1;
+    return 1;  // Arquivo existe
 }
 
+// Função principal de autenticação do sistema
+// Verifica credenciais e define o tipo de usuário logado
 int fazer_login() {
     char cpf[12], senha[20];
     
@@ -303,6 +351,7 @@ int fazer_login() {
     scanf("%s", cpf);
     limpar_buffer();
     
+    // Valida formato do CPF antes de prosseguir
     if (!validar_cpf(cpf)) {
         printf("CPF invalido!\n");
         pausar();
@@ -313,7 +362,7 @@ int fazer_login() {
     scanf("%s", senha);
     limpar_buffer();
     
-    // Admin
+    // Verifica login do administrador (credenciais fixas)
     if (strcmp(cpf, "12345678909") == 0 && strcmp(senha, "admin") == 0) {
         admin_logado = 1;
         printf("Login admin realizado com sucesso!\n");
@@ -321,18 +370,20 @@ int fazer_login() {
         return 1;
     }
     
-    // Aluno
+    // Verifica login de aluno (busca no arquivo alunos.txt)
     FILE *file_aluno = fopen("alunos.txt", "r");
     if (file_aluno != NULL) {
         char linha[300];
         while (fgets(linha, sizeof(linha), file_aluno)) {
             int mat;
             char nome[100], cpf_arquivo[12], senha_arquivo[20];
+            // Lê dados do aluno da linha
             sscanf(linha, "%d|%[^|]|%[^|]|%[^|]|%*s", &mat, nome, cpf_arquivo, senha_arquivo);
             
+            // Compara CPF e senha
             if (strcmp(cpf, cpf_arquivo) == 0 && strcmp(senha, senha_arquivo) == 0) {
                 aluno_logado = 1;
-                matricula_atual = mat;
+                matricula_atual = mat;  // Armazena matrícula para uso posterior
                 printf("Login aluno realizado com sucesso! Bem-vindo, %s!\n", nome);
                 fclose(file_aluno);
                 pausar();
@@ -342,7 +393,7 @@ int fazer_login() {
         fclose(file_aluno);
     }
     
-    // Professor
+    // Verifica login de professor (busca no arquivo professores.txt)
     FILE *file_prof = fopen("professores.txt", "r");
     if (file_prof != NULL) {
         char linha[400];
