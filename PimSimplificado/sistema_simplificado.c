@@ -62,6 +62,13 @@ typedef struct {
     float nota;            // Nota obtida (0.0 a 10.0)
 } Nota;
 
+typedef struct {
+    int id;
+    int aula_id;
+    int aluno_matricula;
+    char presenca;
+} Presenca;
+
 // Variáveis globais para controle de sessão
 int admin_logado = 0;      // Flag: 1 se admin está logado, 0 caso contrário
 int aluno_logado = 0;      // Flag: 1 se aluno está logado, 0 caso contrário
@@ -76,12 +83,16 @@ void pausar();                                                     // Pausa exec
 int fazer_login();                                                 // Realiza login no sistema
 void menu_admin();                                                 // Menu do administrador
 void menu_aluno();                                                 // Menu do aluno
-void menu_professor();                                             // Menu do professor
+void menu_professor();
+void menu_diario_eletronico();                                             // Menu do professor
 int validar_cpf(char *cpf);                                        // Valida formato do CPF
 int gerar_id(char *arquivo);                                       // Gera próximo ID disponível
 int confirmar_operacao(char *mensagem);                            // Confirma operação crítica
 int validar_id_positivo(int id);                                   // Valida se ID é positivo
-int verificar_arquivo_existe(char *arquivo, char *mensagem_erro);  // Verifica se arquivo existe
+int verificar_arquivo_existe(char *arquivo, char *mensagem_erro);
+int selecionar_turma();
+int selecionar_aula_professor(int turma_id);
+void listar_alunos_turma(int turma_id);  // Verifica se arquivo existe
 
 // Funções de gerenciamento de turmas
 void cadastrar_turma();  // Cadastra nova turma
@@ -114,7 +125,9 @@ void excluir_atividade();     // Remove atividade do sistema
 void lancar_notas();     // Lança notas para atividades
 void consultar_notas();  // Consulta notas cadastradas
 void excluir_nota();     // Remove nota do sistema
-void minhas_notas();     // Mostra notas do aluno logado
+void minhas_notas();
+void registrar_presenca();
+void consultar_presencas();     // Mostra notas do aluno logado
 
 // IMPLEMENTAÇÃO DAS FUNÇÕES
 
@@ -417,6 +430,97 @@ int fazer_login() {
     printf("CPF ou senha incorretos!\n");
     pausar();
     return 0;
+}
+
+int selecionar_turma() {
+    printf("=== TURMAS DISPONIVEIS ===\n");
+    FILE *file = fopen("turmas.txt", "r");
+    if (file == NULL) {
+        printf("Nenhuma turma cadastrada!\n");
+        pausar();
+        return -1;
+    }
+    
+    char linha[200];
+    while (fgets(linha, sizeof(linha), file)) {
+        int id, serie, ano;
+        char nome[100], turno[20];
+        sscanf(linha, "%d|%[^|]|%d|%[^|]|%d", &id, nome, &serie, turno, &ano);
+        printf("ID: %d | Nome: %s | Turno: %s | Ano: %d\n", id, nome, turno, ano);
+    }
+    fclose(file);
+    
+    int turma_id;
+    printf("\nID da turma (0 para cancelar): ");
+    scanf("%d", &turma_id);
+    limpar_buffer();
+    
+    if (turma_id == 0) {
+        printf("Operacao cancelada.\n");
+        pausar();
+    }
+    return turma_id;
+}
+
+int selecionar_aula_professor(int turma_id) {
+    printf("\n=== MINHAS AULAS ===\n");
+    FILE *file = fopen("aulas.txt", "r");
+    if (file == NULL) {
+        printf("Nenhuma aula registrada!\n");
+        pausar();
+        return -1;
+    }
+    
+    char linha[300];
+    int tem_aulas = 0;
+    while (fgets(linha, sizeof(linha), file)) {
+        int id, turma, prof_mat;
+        char disciplina[50], data[11], horario[15];
+        sscanf(linha, "%d|%d|%d|%[^|]|%[^|]|%s", &id, &turma, &prof_mat, disciplina, data, horario);
+        
+        if (turma == turma_id && prof_mat == matricula_atual) {
+            printf("ID: %d | Disciplina: %s | Data: %s | Horario: %s\n", id, disciplina, data, horario);
+            tem_aulas = 1;
+        }
+    }
+    fclose(file);
+    
+    if (!tem_aulas) {
+        printf("Nenhuma aula encontrada para esta turma!\n");
+        pausar();
+        return -1;
+    }
+    
+    int aula_id;
+    printf("\nID da aula (0 para cancelar): ");
+    scanf("%d", &aula_id);
+    limpar_buffer();
+    
+    if (aula_id == 0) {
+        printf("Operacao cancelada.\n");
+        pausar();
+    }
+    return aula_id;
+}
+
+void listar_alunos_turma(int turma_id) {
+    printf("\n=== ALUNOS DA TURMA ===\n");
+    FILE *file = fopen("alunos.txt", "r");
+    if (file == NULL) {
+        printf("Erro ao acessar alunos!\n");
+        return;
+    }
+    
+    char linha[300];
+    while (fgets(linha, sizeof(linha), file)) {
+        int mat, turma;
+        char nome[100];
+        sscanf(linha, "%d|%[^|]|%*[^|]|%*[^|]|%d", &mat, nome, &turma);
+        if (turma == turma_id) {
+            printf("Matricula: %d | Nome: %s\n", mat, nome);
+        }
+    }
+    fclose(file);
 }
 
 void cadastrar_turma() {
@@ -2385,6 +2489,180 @@ void excluir_nota() {
     pausar();
 }
 
+void registrar_presenca() {
+    if (!professor_logado) {
+        printf("Acesso negado!\n");
+        pausar();
+        return;
+    }
+    
+    int turma_id = selecionar_turma();
+    if (turma_id <= 0) return;
+    
+    listar_alunos_turma(turma_id);
+    
+    int aula_id = selecionar_aula_professor(turma_id);
+    if (aula_id <= 0) return;
+    
+    int matricula_aluno;
+    printf("\nMatricula do aluno (0 para cancelar): ");
+    scanf("%d", &matricula_aluno);
+    limpar_buffer();
+    
+    if (matricula_aluno == 0) {
+        printf("Operacao cancelada.\n");
+        pausar();
+        return;
+    }
+    
+    char presenca;
+    do {
+        printf("Selecione a presenca do aluno (\"P\" para presente, \"F\" para falta): ");
+        scanf(" %c", &presenca);
+        limpar_buffer();
+        presenca = toupper(presenca);
+        
+        if (presenca != 'P' && presenca != 'F') {
+            printf("Erro: Digite P para Presente ou F para Falta!\n");
+        }
+    } while (presenca != 'P' && presenca != 'F');
+    
+    // Verificar se já existe presença registrada
+    FILE *file_check = fopen("presencas.txt", "r");
+    int ja_tem_presenca = 0;
+    if (file_check != NULL) {
+        char linha_check[100];
+        while (fgets(linha_check, sizeof(linha_check), file_check)) {
+            int aula, aluno;
+            sscanf(linha_check, "%*d|%d|%d", &aula, &aluno);
+            if (aula == aula_id && aluno == matricula_aluno) {
+                ja_tem_presenca = 1;
+                break;
+            }
+        }
+        fclose(file_check);
+    }
+    
+    if (ja_tem_presenca) {
+        // Atualizar presença existente
+        FILE *file_presencas = fopen("presencas.txt", "r");
+        FILE *temp_presencas = fopen("temp_presencas.txt", "w");
+        
+        if (file_presencas != NULL && temp_presencas != NULL) {
+            char linha_pres[100];
+            while (fgets(linha_pres, sizeof(linha_pres), file_presencas)) {
+                int id_pres, aula, aluno;
+                char pres_antiga;
+                sscanf(linha_pres, "%d|%d|%d|%c", &id_pres, &aula, &aluno, &pres_antiga);
+                
+                if (aula == aula_id && aluno == matricula_aluno) {
+                    fprintf(temp_presencas, "%d|%d|%d|%c\n", id_pres, aula, aluno, presenca);
+                } else {
+                    fprintf(temp_presencas, "%s", linha_pres);
+                }
+            }
+            fclose(file_presencas);
+            fclose(temp_presencas);
+            remove("presencas.txt");
+            rename("temp_presencas.txt", "presencas.txt");
+            printf("Presenca atualizada com sucesso!\n");
+        } else {
+            printf("Erro ao atualizar presenca!\n");
+        }
+    } else {
+        // Registrar nova presença
+        Presenca nova_presenca;
+        nova_presenca.id = gerar_id("presencas.txt");
+        nova_presenca.aula_id = aula_id;
+        nova_presenca.aluno_matricula = matricula_aluno;
+        nova_presenca.presenca = presenca;
+        
+        FILE *file_presenca = fopen("presencas.txt", "a");
+        if (file_presenca != NULL) {
+            fprintf(file_presenca, "%d|%d|%d|%c\n", nova_presenca.id, nova_presenca.aula_id, nova_presenca.aluno_matricula, nova_presenca.presenca);
+            fclose(file_presenca);
+            printf("Presenca registrada com sucesso!\n");
+        } else {
+            printf("Erro ao salvar presenca!\n");
+        }
+    }
+    pausar();
+}
+
+void consultar_presencas() {
+    if (!professor_logado) {
+        printf("Acesso negado!\n");
+        pausar();
+        return;
+    }
+    
+    int turma_id = selecionar_turma();
+    if (turma_id <= 0) return;
+    
+    int aula_id = selecionar_aula_professor(turma_id);
+    if (aula_id <= 0) return;
+    
+    printf("\n=== PRESENCAS DA AULA ===\n");
+    FILE *file_alunos = fopen("alunos.txt", "r");
+    if (file_alunos != NULL) {
+        char linha[300];
+        while (fgets(linha, sizeof(linha), file_alunos)) {
+            int mat, turma;
+            char nome[100];
+            sscanf(linha, "%d|%[^|]|%*[^|]|%*[^|]|%d", &mat, nome, &turma);
+            
+            if (turma == turma_id) {
+                char presenca = '-';
+                FILE *file_presencas = fopen("presencas.txt", "r");
+                if (file_presencas != NULL) {
+                    char linha_pres[100];
+                    while (fgets(linha_pres, sizeof(linha_pres), file_presencas)) {
+                        int aula, aluno;
+                        char pres;
+                        sscanf(linha_pres, "%*d|%d|%d|%c", &aula, &aluno, &pres);
+                        if (aula == aula_id && aluno == mat) {
+                            presenca = pres;
+                            break;
+                        }
+                    }
+                    fclose(file_presencas);
+                }
+                printf("Aluno: %s | %c\n", nome, presenca);
+            }
+        }
+        fclose(file_alunos);
+    }
+    pausar();
+}
+
+void menu_diario_eletronico() {
+    int opcao;
+    
+    do {
+        system("cls");
+        printf("=== DIARIO ELETRONICO ===\n");
+        printf("1. Lancar Notas\n");
+        printf("2. Consultar Notas\n");
+        printf("3. Excluir Nota\n");
+        printf("4. Presenca do Aluno\n");
+        printf("5. Consultar Presencas\n");
+        printf("0. Voltar\n");
+        printf("Opcao: ");
+        scanf("%d", &opcao);
+        limpar_buffer();
+        
+        switch (opcao) {
+            case 1: lancar_notas(); break;
+            case 2: consultar_notas(); break;
+            case 3: excluir_nota(); break;
+            case 4: registrar_presenca(); break;
+            case 5: consultar_presencas(); break;
+            case 0: break;
+            default: printf("Opcao invalida!\n"); pausar();
+        }
+    } while (opcao != 0);
+}
+
 void menu_admin() {
     int opcao;
     
@@ -2477,9 +2755,7 @@ void menu_professor() {
         printf("4. Lancar Atividade\n");
         printf("5. Consultar Atividades\n");
         printf("6. Excluir Atividade\n");
-        printf("7. Lancar Notas\n");
-        printf("8. Consultar Notas\n");
-        printf("9. Excluir Nota\n");
+        printf("7. Diario Eletronico\n");
         printf("0. Sair\n");
         printf("Opcao: ");
         scanf("%d", &opcao);
@@ -2492,9 +2768,7 @@ void menu_professor() {
             case 4: lancar_atividade(); break;
             case 5: consultar_atividades(); break;
             case 6: excluir_atividade(); break;
-            case 7: lancar_notas(); break;
-            case 8: consultar_notas(); break;
-            case 9: excluir_nota(); break;
+            case 7: menu_diario_eletronico(); break;
             case 0: break;
             default: printf("Opcao invalida!\n"); pausar();
         }

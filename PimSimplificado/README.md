@@ -34,6 +34,19 @@ Sistema de gestão escolar desenvolvido em C com funcionalidades essenciais para
 - Consultar atividades (filtradas por perfil)
 - Excluir atividades (admin: todas / professor: apenas próprias)
 
+### Diário Eletrônico (Professor)
+- Lançar notas para atividades
+- Consultar notas das atividades
+- Excluir notas
+- Registrar presença dos alunos
+- Consultar presenças por aula
+
+### Sistema de Notas
+- Notas de 0.0 a 10.0
+- Vinculação nota-atividade-aluno
+- Atualização de notas existentes
+- Controle de permissões por professor
+
 ### Funcionalidades por Perfil
 
 **Administrador:**
@@ -47,11 +60,16 @@ Sistema de gestão escolar desenvolvido em C com funcionalidades essenciais para
 - Lançar atividades
 - Consultar suas atividades
 - Excluir suas atividades
+- Diário eletrônico (notas e presenças)
+- Lançar e consultar notas
+- Registrar e consultar presenças
 
 **Aluno:**
 - Visualizar sua turma
 - Visualizar aulas da sua turma
 - Consultar atividades da sua turma
+- Visualizar suas notas
+- Médias por matéria e geral
 
 ## Como Compilar e Executar
 
@@ -68,6 +86,8 @@ O sistema cria automaticamente os seguintes arquivos:
 - `professores.txt` - Dados dos professores
 - `aulas.txt` - Registro de aulas
 - `atividades.txt` - Registro de atividades
+- `notas.txt` - Notas dos alunos
+- `presencas.txt` - Controle de presenças
 
 ## Validações
 
@@ -78,11 +98,12 @@ O sistema cria automaticamente os seguintes arquivos:
 
 ## Características Técnicas
 
-- **Linhas de código**: ~1950 linhas
+- **Linhas de código**: ~2800 linhas
 - **Linguagem**: C (ANSI)
 - **Armazenamento**: Arquivos de texto
 - **Interface**: Console/Terminal
 - **Compilador**: GCC
+- **Funcionalidades**: 7 módulos principais
 
 ## Estrutura dos Dados
 
@@ -100,3 +121,9 @@ O sistema cria automaticamente os seguintes arquivos:
 
 ### Atividades
 `ID|Tipo|Nome|TurmaID|ProfessorMatricula|Disciplina|Data`
+
+### Notas
+`ID|AtividadeID|AlunoMatricula|Nota`
+
+### Presenças
+`ID|AulaID|AlunoMatricula|Presenca`
