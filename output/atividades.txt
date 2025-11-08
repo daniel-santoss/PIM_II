@@ -1,2 +1,0 @@
-6|10000013|1|Grupo|Avaliacoes|Portugues|10|S|3 Ano A
-7|10000013|1|Atividade Individual|Atividades diversas|Portugues|9|N|Atividade Individual para testes

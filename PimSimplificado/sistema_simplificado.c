@@ -80,6 +80,7 @@ int matricula_atual = 0;   // Armazena a matrícula do usuário logado
 // Funções utilitárias
 void limpar_buffer();                                              // Limpa buffer do teclado
 void pausar();                                                     // Pausa execução até Enter
+char* obter_caminho_arquivo(char *nome_arquivo);                   // Cria caminho completo do arquivo
 int fazer_login();                                                 // Realiza login no sistema
 void menu_admin();                                                 // Menu do administrador
 void menu_aluno();                                                 // Menu do aluno
