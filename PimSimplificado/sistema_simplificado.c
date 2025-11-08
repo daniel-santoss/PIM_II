@@ -1839,7 +1839,7 @@ void lancar_atividade() {
     }
     
     do {
-        printf("Data (DD/MM/AAAA): ");
+        printf("Data da atividade (DD/MM/AAAA): ");
         scanf("%s", nova_atividade.data);
         limpar_buffer();
         
