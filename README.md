@@ -1,230 +1,189 @@
-# Sistema Escolar em C
+# Sistema Escolar
 
-## Descrição
-Aplicação console em C para gerenciamento de sistema escolar com as seguintes funcionalidades:
+Sistema de gestão escolar desenvolvido em C com funcionalidades completas para controle acadêmico, incluindo turmas, alunos, professores, aulas, atividades, notas e presenças.
 
-### Funcionalidades
-- **Criação de turmas**: Nome, ano, série, turno, capacidade máxima
-- **Cadastro de aluno**: Nome, email, senha, data de nascimento, gênero, CPF, número da matrícula
-- **Cadastro de professor**: Nome, email, senha, data de nascimento, gênero, CPF, número da matrícula, especialidade
-- **Registro de aulas**: Professor, turma, dia da aula, hora da aula, matéria
-- **Sistema de login**: Utilizando CPF e senha
-- **5 aulas por período**: Cada aula com duração de 50 minutos
-- **3 períodos**: Matutino, Vespertino e Noturno
-- **Intervalos**: 30 minutos entre a 3ª e 4ª aula
+## 🚀 Funcionalidades
 
-### Horários de Funcionamento
-
-**Período Matutino (07h00-11h40)**
-- 1ª Aula: 07h00-07h50
-- 2ª Aula: 07h50-08h40
-- 3ª Aula: 08h40-09h30
-- Intervalo: 09h30-10h00 (30 minutos)
-- 4ª Aula: 10h00-10h50
-- 5ª Aula: 10h50-11h40
-
-**Período Vespertino (13h00-17h40)**
-- 1ª Aula: 13h00-13h50
-- 2ª Aula: 13h50-14h40
-- 3ª Aula: 14h40-15h30
-- Intervalo: 15h30-16h00 (30 minutos)
-- 4ª Aula: 16h00-16h50
-- 5ª Aula: 16h50-17h40
-
-**Período Noturno (18h00-22h40)**
-- 1ª Aula: 18h00-18h50
-- 2ª Aula: 18h50-19h40
-- 3ª Aula: 19h40-20h30
-- Intervalo: 20h30-21h00 (30 minutos)
-- 4ª Aula: 21h00-21h50
-- 5ª Aula: 21h50-22h40
-
-## Menu de Opções
-1. **Login** - Fazer login com CPF e senha
-2. **Criar turma** - Cadastrar nova turma
-3. **Cadastrar aluno** - Registrar novo aluno
-4. **Cadastrar professor** - Registrar novo professor
-5. **Registrar aula** - Agendar nova aula
-6. **Listar turmas** - Visualizar todas as turmas
-7. **Listar aulas** - Visualizar todas as aulas
-0. **Sair** - Encerrar o programa
-
-## Estrutura dos Dados
-
-### Turma
-- ID (gerado automaticamente)
-- Nome
-- Ano
-- Série
-- Turno
-- Capacidade máxima
-
-### Aluno/Professor
-- Nome
-- Email
-- Senha
-- Data de nascimento
-- Gênero
-- CPF
-- Número da matrícula (chave primária)
-- Especialidade (apenas professor)
-
-### Aula
-- ID (gerado automaticamente)
-- Matrícula do professor
-- ID da turma
-- Dia da aula
-- Hora da aula
-- Matéria
-
-## Limites do Sistema
-- Máximo 30 alunos por turma
-- Sem limite para número total de alunos e professores (limitado apenas pela memória disponível)
-
-# Sistema de Gestão Escolar
-
-Sistema completo de gerenciamento escolar desenvolvido em linguagem C para controle de alunos, professores, turmas e aulas.
-
-## Sobre o Projeto
-
-Este sistema foi desenvolvido como parte do **Projeto Integrado Multidisciplinar II (PIM II)** do curso de **Análise e Desenvolvimento de Sistemas**. O objetivo é criar uma solução robusta para gestão educacional com interface de linha de comando.
-
-## Funcionalidades Principais
-
-### Sistema de Autenticação
-- **Administrador**: Login com CPF e Senha cadastrados
+### 🔐 Sistema de Login
+- **Administrador (Único)**: CPF: `12345678909` | Senha: `admin`
 - **Alunos**: Login com CPF e senha cadastrados
 - **Professores**: Login com CPF e senha cadastrados
 
-### Gestão de Alunos
-- Cadastro com validação completa (CPF, email, dados pessoais)
-- Exclusão de registros
-- Listagem detalhada
-- Consulta de turma individual (para alunos)
+### 🏫 Gestão de Turmas (Admin)
+- Cadastrar turmas (ID automático, nome, série, turno, ano)
+- Listar todas as turmas cadastradas
+- Excluir turmas (com validação de dependências)
 
-### Gestão de Professores
-- Cadastro com múltiplas matérias
-- Exclusão de registros
-- Listagem completa
-- Controle de aulas próprias
+### 👨‍🎓 Gestão de Alunos (Admin)
+- Cadastrar alunos (matrícula automática, nome, CPF, senha, turma)
+- Listar todos os alunos com informações da turma
+- Excluir alunos do sistema
 
-### Gestão de Turmas
-- Criação (1º, 2º, 3º ano + letras A-Z)
-- Exclusão de turmas
-- **Edição Avançada**:
-  - Alterar dados (série, letra, ano letivo, turno)
-  - Incluir alunos (máx. 30 por turma)
-  - Remover alunos
-- Listagem com detalhes e estatísticas
+### 👨‍🏫 Gestão de Professores (Admin)
+- Cadastrar professores (matrícula automática, nome, CPF, senha, matérias)
+- Listar todos os professores e suas matérias
+- Excluir professores (com validação de dependências)
 
-### Gestão de Aulas
-- Registro com validação de horários
-- Edição completa (turma, professor, matéria, data, horário)
-- Exclusão de registros
-- Listagem organizada
+### 📚 Gestão de Aulas (Admin/Professor)
+- Registrar aulas (turma, professor, disciplina, data, horário)
+- Listar aulas (todas ou filtradas por usuário)
+- Excluir aulas (admin: todas / professor: apenas próprias)
+- Horários automáticos por turno (Matutino/Vespertino/Noturno)
 
-## Validações e Segurança
+### 📝 Gestão de Atividades (Admin/Professor)
+- Lançar atividades (tipo, nome, turma, disciplina, data)
+- Tipos: Prova, Trabalho, Exercício
+- Consultar atividades (filtradas por perfil)
+- Excluir atividades (admin: todas / professor: apenas próprias)
 
-### Validação de Dados
-- **CPF**: Formato com 11 dígitos numéricos
-- **Email**: Validação de formato (@, .)
-- **Data**: Formato DD/MM/AAAA com validação
-- **Ano Letivo**: Consistência com ano da turma
+### 📊 Diário Eletrônico (Professor)
+- **Sistema de Notas**:
+  - Lançar notas (0.0 a 10.0) para atividades
+  - Consultar notas das atividades
+  - Atualizar notas existentes
+  - Excluir notas
+- **Controle de Presenças**:
+  - Registrar presença dos alunos (P/F)
+  - Consultar presenças por aula
+  - Atualizar presenças existentes
 
-### Regras de Negócio
-- Turmas únicas (sem duplicatas)
-- Limite de 30 alunos por turma
-- Professores editam apenas suas aulas
-- Alteração de turma bloqueada com aulas registradas
-- Horários específicos por turno
+## 👥 Funcionalidades por Perfil
 
-### Controle de Fluxo
-- **"0 para cancelar"** em todas as operações
-- Mensagens de erro específicas
-- Confirmações de ações críticas
+### 🔧 **Administrador**
+- Acesso completo a todas as funcionalidades
+- CRUD de turmas, alunos, professores, aulas e atividades
+- Lançamento e consulta de notas
+- Controle total do sistema
 
-## Horários de Funcionamento
+### 👨‍🏫 **Professor**
+- Registrar e gerenciar suas aulas
+- Lançar e gerenciar atividades de suas matérias
+- Diário eletrônico completo:
+  - Lançar e consultar notas
+  - Registrar e consultar presenças
+- Visualizar apenas dados relacionados às suas turmas
 
-| **Turno** | **Horário** | **Aulas** |
-|-----------|-------------|----------|
-| **Matutino** | 07h00 - 11h40 | 5 aulas de 50min |
-| **Vespertino** | 13h00 - 17h40 | 5 aulas de 50min |
-| **Noturno** | 18h00 - 22h40 | 5 aulas de 50min |
+### 👨‍🎓 **Aluno**
+- Visualizar informações da sua turma
+- Consultar aulas da sua turma
+- Visualizar atividades da sua turma
+- **Minhas Notas**:
+  - Visualizar todas as notas
+  - Médias por matéria
+  - Média geral
+  - Resumo acadêmico completo
 
-### Grade Detalhada
+## 📁 Arquivos de Dados
 
-**Matutino**
-- 1ª Aula: 07h00-07h50
-- 2ª Aula: 07h50-08h40
-- 3ª Aula: 08h40-09h30
-- **Intervalo**: 09h30-10h00
-- 4ª Aula: 10h00-10h50
-- 5ª Aula: 10h50-11h40
+O sistema cria automaticamente os seguintes arquivos:
+- `turmas.txt` - Dados das turmas
+- `alunos.txt` - Dados dos alunos  
+- `professores.txt` - Dados dos professores
+- `aulas.txt` - Registro de aulas
+- `atividades.txt` - Registro de atividades
+- `notas.txt` - Notas dos alunos
+- `presencas.txt` - Controle de presenças
 
-**Vespertino**
-- 1ª Aula: 13h00-13h50
-- 2ª Aula: 13h50-14h40
-- 3ª Aula: 14h40-15h30
-- **Intervalo**: 15h30-16h00
-- 4ª Aula: 16h00-16h50
-- 5ª Aula: 16h50-17h40
+## ✅ Validações e Regras
 
-**Noturno**
-- 1ª Aula: 18h00-18h50
-- 2ª Aula: 18h50-19h40
-- 3ª Aula: 19h40-20h30
-- **Intervalo**: 20h30-21h00
-- 4ª Aula: 21h00-21h50
-- 5ª Aula: 21h50-22h40
+- **CPF**: Deve ter exatamente 11 dígitos numéricos
+- **IDs**: Gerados automaticamente e únicos
+- **Senhas**: Mínimo de 4 caracteres
+- **Disciplinas**: Apenas matérias válidas do sistema
+- **Notas**: Entre 0.0 e 10.0
+- **Datas**: Formato DD/MM/AAAA
+- **Permissões**: Controle rigoroso por perfil de usuário
+- **Integridade**: Professores só editam seus próprios dados
 
-## Matérias Disponíveis
+## 🎯 Matérias Disponíveis
 
-| **Exatas** | **Humanas** | **Linguagens** |
-|------------|-------------|----------------|
-| Matemática | Geografia | Português |
-| Ciências | História | Inglês |
-| | Filosofia | |
-| | Sociologia | |
+- Matemática
+- Ciências  
+- Geografia
+- História
+- Filosofia
+- Sociologia
+- Português
+- Inglês
 
-## Como Executar
+## ⚙️ Características Técnicas
 
-### Pré-requisitos
-- Compilador GCC
-- Sistema operacional Windows/Linux/macOS
-
-### Compilação
-```bash
-gcc sistema_escolar.c -o sistema_escolar
-```
-
-### Execução
-```bash
-./sistema_escolar
-```
-
-## Estrutura do Projeto
-
-```
-PIM_II/
-├── sistema_escolar.c     # Código fonte principal
-├── README.md             # Documentação
-└── output/               # Arquivos de dados
-    ├── alunos.txt
-    ├── professores.txt
-    ├── turmas.txt
-    ├── aulas.txt
-    ├── aluno_turma.txt
-    └── contadores.txt
-```
-
-## Tecnologias Utilizadas
-
-- **Linguagem**: C (Padrão ANSI)
-- **Armazenamento**: Arquivos de texto (.txt)
-- **Interface**: Terminal/Console
+- **Linhas de código**: ~2800 linhas
+- **Linguagem**: C (ANSI)
+- **Armazenamento**: Arquivos de texto (formato pipe-separated)
+- **Interface**: Console/Terminal
 - **Compilador**: GCC
+- **Módulos**: 7 módulos principais
+- **Estruturas**: 6 estruturas de dados principais
 
-## Desenvolvedor
+## 📋 Estrutura dos Dados
 
-**Projeto desenvolvido para o PIM II - Análise e Desenvolvimento de Sistemas**
->>>>>>> testes
+### Turmas
+```
+ID|Nome|Serie|Turno|Ano
+1|1 Ano A|1|Matutino|2025
+```
+
+### Alunos  
+```
+Matricula|Nome|CPF|Senha|TurmaID
+1001|João Silva|12345678901|1234|1
+```
+
+### Professores
+```
+Matricula|Nome|CPF|Senha|Materias
+2001|Maria Santos|98765432109|prof123|Matematica, Ciencias
+```
+
+### Aulas
+```
+ID|TurmaID|ProfessorMatricula|Disciplina|Data|Horario
+1|1|2001|Matematica|15/03/2025|07:00-07:50
+```
+
+### Atividades
+```
+ID|Tipo|Nome|TurmaID|ProfessorMatricula|Disciplina|Data
+1|Prova|Prova Bimestral|1|2001|Matematica|20/03/2025
+```
+
+### Notas
+```
+ID|AtividadeID|AlunoMatricula|Nota
+1|1|1001|8.5
+```
+
+### Presenças
+```
+ID|AulaID|AlunoMatricula|Presenca
+1|1|1001|P
+```
+
+## 🔄 Fluxo de Uso
+
+1. **Login** com credenciais apropriadas
+2. **Administrador** configura turmas, alunos e professores
+3. **Professores** registram aulas e atividades
+4. **Professores** lançam notas e controlam presenças
+5. **Alunos** consultam suas informações acadêmicas
+
+## 🛡️ Segurança
+
+- Controle de acesso por perfil
+- Validação de dados de entrada
+- Proteção contra operações não autorizadas
+- Confirmação para operações críticas
+
+## 📈 Relatórios Disponíveis
+
+- Lista completa de turmas, alunos e professores
+- Aulas por turma e professor
+- Atividades por turma e disciplina
+- Notas por atividade e aluno
+- Presenças por aula
+- Médias acadêmicas individuais
+
+---
+
+**Desenvolvido em C** | **Sistema Completo de Gestão Escolar**
