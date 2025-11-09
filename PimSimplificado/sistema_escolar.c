@@ -1839,7 +1839,7 @@ void lancar_atividade() {
     }
     
     do {
-        printf("Data da atividade (DD/MM/AAAA): ");
+        printf("Data da atividade  (DD/MM/AAAA): ");
         scanf("%s", nova_atividade.data);
         limpar_buffer();
         
@@ -2781,7 +2781,7 @@ int main() {
     
     do {
         system("cls");
-        printf("=== SISTEMA ESCOLAR SIMPLIFICADO ===\n");
+        printf("=== SISTEMA ESCOLAR ===\n");
         printf("1. Fazer Login\n");
         printf("0. Sair\n");
         printf("Opcao: ");
